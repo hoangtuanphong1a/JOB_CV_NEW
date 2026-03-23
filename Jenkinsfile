@@ -8,10 +8,10 @@ pipeline {
         SERVER_USER = "ubuntu"
 
         // MySQL Configuration
-        MYSQL_ROOT_PASSWORD = "TokExscZiEiqyXnCgCkFmxXGobgmQqTM"
-        MYSQL_DATABASE = "railway"
-        MYSQL_USER = "root"
-        MYSQL_PASSWORD = "TokExscZiEiqyXnCgCkFmxXGobgmQqTM"
+        MYSQL_ROOT_PASSWORD = "123321"
+        MYSQL_DATABASE = "JOB"
+        MYSQL_USER = "TUANPHONG"
+        MYSQL_PASSWORD = "123321"
 
         // JWT Configuration
         JWT_SECRET = "cv-king-super-secret-jwt-key-2024-secure"
