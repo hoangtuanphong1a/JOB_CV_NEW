@@ -111,7 +111,7 @@ export default function CVBuilderPage() {
 
   const loadSavedCV = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("access_token");
       if (!token) return;
 
       const response = await fetch("/api/cv/my-cv", {
@@ -136,7 +136,7 @@ export default function CVBuilderPage() {
   const saveCV = async () => {
     setIsSaving(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("access_token");
       if (!token) {
         router.push("/auth/login");
         return;
@@ -173,7 +173,7 @@ export default function CVBuilderPage() {
 
   const downloadCV = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("access_token");
       if (!token) {
         router.push("/auth/login");
         return;

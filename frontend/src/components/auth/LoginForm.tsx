@@ -136,10 +136,11 @@ export function LoginForm() {
       } else if (userRoles.includes("employer")) {
         router.push("/dashboard/employer");
       } else if (userRoles.includes("job_seeker")) {
-        router.push("/jobs");
+        // Job seeker dashboard route
+        router.push("/dashboard/candidate");
       } else {
         // Default fallback for any other roles
-        router.push("/jobs");
+        router.push("/dashboard/candidate");
       }
     } catch (error) {
       console.error("Login failed:", error);
@@ -158,7 +159,7 @@ export function LoginForm() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // On success, redirect to jobs page for candidates
-      router.push("/jobs");
+      router.push("/dashboard/candidate");
     } catch (error) {
       console.error("Google login failed:", error);
       // TODO: Show error message
