@@ -24,10 +24,15 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies with frozen lockfile for reproducible builds
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --prod=false
 
 # ---------- Builder Stage ----------
 FROM deps AS builder
+
+# This value is inlined into the frontend bundle at `next build` time
+# because it's a `NEXT_PUBLIC_*` env var used in client-side code.
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 # Copy source code
 COPY . .
@@ -49,24 +54,23 @@ WORKDIR /app
 
 # Set production environment
 ENV NODE_ENV=production
-RUN chown -R nextjs:nodejs /app
+
 # Copy Next.js build output
 COPY --from=builder --chown=nextjs:nodejs /app/next.config.ts ./
-# COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
 COPY --from=builder --chown=nextjs:nodejs /app/pnpm-lock.yaml ./
 
 # Install production dependencies
-RUN pnpm install --prod --frozen-lockfile \
+RUN pnpm install --frozen-lockfile \
     && pnpm store prune
 
 # Switch to non-root user
 USER nextjs
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
+# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+#     CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
 
 # Expose port
 EXPOSE 3000
