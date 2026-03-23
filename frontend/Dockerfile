@@ -49,7 +49,7 @@ WORKDIR /app
 
 # Set production environment
 ENV NODE_ENV=production
-
+RUN chown -R nextjs:nodejs /app
 # Copy Next.js build output
 COPY --from=builder --chown=nextjs:nodejs /app/next.config.ts ./
 # COPY --from=builder --chown=nextjs:nodejs /app/public ./public
