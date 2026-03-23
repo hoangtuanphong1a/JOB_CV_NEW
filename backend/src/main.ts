@@ -8,7 +8,15 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'], // Frontend URLs
+    origin: [
+      'http://localhost:3000', 
+      'http://localhost:3001',
+      'http://15.135.224.224:3000',
+      'https://15.135.224.224:3000',
+      'http://ec2-15-135-224-224.ap-southeast-2.compute.amazonaws.com:3000',
+      'https://ec2-15-135-224-224.ap-southeast-2.compute.amazonaws.com:3000',
+      process.env.FRONTEND_URL,
+    ].filter(Boolean), // Frontend URLs
     credentials: true,
   });
 

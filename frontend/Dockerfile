@@ -31,7 +31,7 @@ FROM deps AS builder
 
 # This value is inlined into the frontend bundle at `next build` time
 # because it's a `NEXT_PUBLIC_*` env var used in client-side code.
-ARG NEXT_PUBLIC_API_URL=http://localhost:3001
+ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 # Copy source code

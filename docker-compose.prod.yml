@@ -59,6 +59,8 @@ services:
       JWT_EXPIRES_IN: 24h
       PORT: 3001
       NODE_ENV: production
+      # CORS configuration
+      FRONTEND_URL: http://ec2-15-135-224-224.ap-southeast-2.compute.amazonaws.com:3000
     ports:
       - "3001:3001"
     depends_on:
@@ -74,8 +76,14 @@ services:
     image: ${DOCKER_REGISTRY}/${FRONTEND_IMAGE_NAME}:latest
     container_name: job-frontend-1
     restart: unless-stopped
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://ec2-15-135-224-224.ap-southeast-2.compute.amazonaws.com:3001
     environment:
-      NEXT_PUBLIC_API_URL: http://backend:3001
+      # Use external URL for browser access, not internal Docker network
+      NEXT_PUBLIC_API_URL: http://ec2-15-135-224-224.ap-southeast-2.compute.amazonaws.com:3001
     ports:
       - "3000:3000"
     depends_on:
