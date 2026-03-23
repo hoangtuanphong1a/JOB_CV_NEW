@@ -1,0 +1,246 @@
+/*****************************************
+ * JOB PORTAL DATABASE – MYSQL 8.0
+ * Author: Converted by assistant
+ *****************************************/
+
+SET NAMES utf8mb4;
+SET time_zone = '+00:00';
+
+-- =========================
+-- 1. ROLES / USERS
+-- =========================
+CREATE TABLE Roles (
+    RoleId INT AUTO_INCREMENT PRIMARY KEY,
+    RoleName VARCHAR(50) NOT NULL UNIQUE,
+    Description VARCHAR(255),
+    CreatedAt DATETIME DEFAULT UTC_TIMESTAMP()
+);
+
+CREATE TABLE Users (
+    UserId INT AUTO_INCREMENT PRIMARY KEY,
+    Email VARCHAR(256) NOT NULL UNIQUE,
+    PasswordHash VARCHAR(512),
+    IsEmailConfirmed TINYINT(1) DEFAULT 0,
+    CreatedAt DATETIME DEFAULT UTC_TIMESTAMP(),
+    LastLoginAt DATETIME,
+    IsActive TINYINT(1) DEFAULT 1,
+    IsDeleted TINYINT(1) DEFAULT 0,
+    DisplayName VARCHAR(200),
+    AvatarUrl VARCHAR(1000),
+    PreferredLocale VARCHAR(20),
+    GoogleId VARCHAR(200),
+    LinkedInId VARCHAR(200)
+);
+
+CREATE TABLE UserRoles (
+    UserRoleId INT AUTO_INCREMENT PRIMARY KEY,
+    UserId INT NOT NULL,
+    RoleId INT NOT NULL,
+    AssignedAt DATETIME DEFAULT UTC_TIMESTAMP(),
+    FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE,
+    FOREIGN KEY (RoleId) REFERENCES Roles(RoleId)
+);
+
+-- =========================
+-- 2. COMPANIES / EMPLOYERS
+-- =========================
+CREATE TABLE Companies (
+    CompanyId INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(300) NOT NULL,
+    Slug VARCHAR(300) UNIQUE,
+    LogoUrl VARCHAR(1000),
+    BannerUrl VARCHAR(1000),
+    Industry VARCHAR(200),
+    CompanySize VARCHAR(50),
+    Website VARCHAR(500),
+    Location VARCHAR(300),
+    Description TEXT,
+    IsVerified TINYINT(1) DEFAULT 0,
+    CreatedAt DATETIME DEFAULT UTC_TIMESTAMP(),
+    UpdatedAt DATETIME
+);
+
+CREATE TABLE EmployerProfiles (
+    EmployerProfileId INT AUTO_INCREMENT PRIMARY KEY,
+    UserId INT NOT NULL,
+    CompanyId INT NOT NULL,
+    Title VARCHAR(200),
+    Phone VARCHAR(50),
+    CreatedAt DATETIME DEFAULT UTC_TIMESTAMP(),
+    FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE,
+    FOREIGN KEY (CompanyId) REFERENCES Companies(CompanyId) ON DELETE CASCADE
+);
+
+-- =========================
+-- 3. JOB SEEKER
+-- =========================
+CREATE TABLE JobSeekerProfiles (
+    JobSeekerProfileId INT AUTO_INCREMENT PRIMARY KEY,
+    UserId INT NOT NULL UNIQUE,
+    FullName VARCHAR(300),
+    Phone VARCHAR(50),
+    DOB DATE,
+    Location VARCHAR(300),
+    Summary TEXT,
+    CurrentTitle VARCHAR(200),
+    YearsExperience INT,
+    CreatedAt DATETIME DEFAULT UTC_TIMESTAMP(),
+    UpdatedAt DATETIME,
+    FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE
+);
+
+-- =========================
+-- 4. CVs
+-- =========================
+CREATE TABLE CVTemplates (
+    CVTemplateId INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(200),
+    Slug VARCHAR(200) UNIQUE,
+    Description VARCHAR(500),
+    LayoutMeta JSON,
+    IsPublic TINYINT(1) DEFAULT 1,
+    CreatedBy INT,
+    CreatedAt DATETIME DEFAULT UTC_TIMESTAMP(),
+    FOREIGN KEY (CreatedBy) REFERENCES Users(UserId) ON DELETE SET NULL
+);
+
+CREATE TABLE CVs (
+    CVId INT AUTO_INCREMENT PRIMARY KEY,
+    JobSeekerProfileId INT NOT NULL,
+    CVTemplateId INT,
+    Title VARCHAR(250),
+    StructuredData JSON,
+    FileUrl VARCHAR(1000),
+    IsPrimary TINYINT(1) DEFAULT 0,
+    IsPublic TINYINT(1) DEFAULT 0,
+    CreatedAt DATETIME DEFAULT UTC_TIMESTAMP(),
+    UpdatedAt DATETIME,
+    FOREIGN KEY (JobSeekerProfileId) REFERENCES JobSeekerProfiles(JobSeekerProfileId),
+    FOREIGN KEY (CVTemplateId) REFERENCES CVTemplates(CVTemplateId)
+);
+
+-- =========================
+-- 5. JOBS / SKILLS / TAGS
+-- =========================
+CREATE TABLE JobCategories (
+    JobCategoryId INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(200) UNIQUE
+);
+
+CREATE TABLE Skills (
+    SkillId INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(200) UNIQUE
+);
+
+CREATE TABLE JobTags (
+    JobTagId INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(200) UNIQUE
+);
+
+CREATE TABLE Jobs (
+    JobId INT AUTO_INCREMENT PRIMARY KEY,
+    CompanyId INT NOT NULL,
+    PostedByUserId INT,
+    Title VARCHAR(300),
+    Slug VARCHAR(300) UNIQUE,
+    ShortDescription VARCHAR(1000),
+    Description TEXT,
+    Requirements TEXT,
+    Benefits TEXT,
+    SalaryMin INT,
+    SalaryMax INT,
+    Currency VARCHAR(10),
+    JobType VARCHAR(50),
+    Location VARCHAR(300),
+    CategoryId INT,
+    Status VARCHAR(50) DEFAULT 'Active',
+    ViewsCount INT DEFAULT 0,
+    PostedAt DATETIME DEFAULT UTC_TIMESTAMP(),
+    ExpiresAt DATETIME,
+    CreatedAt DATETIME DEFAULT UTC_TIMESTAMP(),
+    UpdatedAt DATETIME,
+    FOREIGN KEY (CompanyId) REFERENCES Companies(CompanyId),
+    FOREIGN KEY (PostedByUserId) REFERENCES Users(UserId),
+    FOREIGN KEY (CategoryId) REFERENCES JobCategories(JobCategoryId)
+);
+
+CREATE TABLE JobSkills (
+    JobSkillId INT AUTO_INCREMENT PRIMARY KEY,
+    JobId INT,
+    SkillId INT,
+    FOREIGN KEY (JobId) REFERENCES Jobs(JobId) ON DELETE CASCADE,
+    FOREIGN KEY (SkillId) REFERENCES Skills(SkillId) ON DELETE CASCADE
+);
+
+CREATE TABLE JobJobTags (
+    JobJobTagId INT AUTO_INCREMENT PRIMARY KEY,
+    JobId INT,
+    JobTagId INT,
+    FOREIGN KEY (JobId) REFERENCES Jobs(JobId) ON DELETE CASCADE,
+    FOREIGN KEY (JobTagId) REFERENCES JobTags(JobTagId) ON DELETE CASCADE
+);
+
+-- =========================
+-- 6. APPLICATIONS
+-- =========================
+CREATE TABLE JobApplications (
+    ApplicationId INT AUTO_INCREMENT PRIMARY KEY,
+    JobId INT,
+    JobSeekerProfileId INT,
+    CVId INT,
+    CoverLetter TEXT,
+    Status VARCHAR(50) DEFAULT 'Pending',
+    AppliedAt DATETIME DEFAULT UTC_TIMESTAMP(),
+    UpdatedAt DATETIME,
+    IsDeleted TINYINT(1) DEFAULT 0,
+    FOREIGN KEY (JobId) REFERENCES Jobs(JobId),
+    FOREIGN KEY (JobSeekerProfileId) REFERENCES JobSeekerProfiles(JobSeekerProfileId),
+    FOREIGN KEY (CVId) REFERENCES CVs(CVId)
+);
+
+-- =========================
+-- 7. NOTIFICATIONS
+-- =========================
+CREATE TABLE Notifications (
+    NotificationId INT AUTO_INCREMENT PRIMARY KEY,
+    UserId INT,
+    Title VARCHAR(250),
+    Message TEXT,
+    IsRead TINYINT(1) DEFAULT 0,
+    Link VARCHAR(1000),
+    CreatedAt DATETIME DEFAULT UTC_TIMESTAMP(),
+    FOREIGN KEY (UserId) REFERENCES Users(UserId)
+);
+
+-- =========================
+-- 8. STORED PROCEDURE
+-- =========================
+DELIMITER $$
+
+CREATE PROCEDURE sp_CreateUser(
+    IN p_Email VARCHAR(256),
+    IN p_PasswordHash VARCHAR(512),
+    IN p_DisplayName VARCHAR(200)
+)
+BEGIN
+    INSERT INTO Users (Email, PasswordHash, DisplayName)
+    VALUES (p_Email, p_PasswordHash, p_DisplayName);
+END$$
+
+DELIMITER ;
+
+-- =========================
+-- 9. SEED DATA
+-- =========================
+INSERT INTO Roles (RoleName) VALUES ('JobSeeker'), ('Employer'), ('Admin');
+
+CALL sp_CreateUser('alice@example.com','hash1','Alice');
+CALL sp_CreateUser('hr@acme.com','hash2','Acme HR');
+CALL sp_CreateUser('admin@example.com','hash3','Admin');
+
+INSERT INTO UserRoles (UserId, RoleId)
+SELECT 1, RoleId FROM Roles WHERE RoleName='JobSeeker';
+INSERT INTO UserRoles (UserId, RoleId)
+SELECT 2, RoleId FROM Roles WHERE RoleName='Employer';
+INSERT INTO UserRoles (UserId, RoleId)
+SELECT 3, RoleId FROM Roles WHERE RoleName='Admin';
