@@ -29,7 +29,7 @@ pipeline {
                 checkout([$class: 'GitSCM',
                     branches: [[name: '*/main']],
                     userRemoteConfigs: [[
-                        url: 'https://github.com/hoangtuanphong1a/cv-king.git',
+                        url: 'https://github.com/hoangtuanphong1a/JOB_CV_NEW.git',
                         credentialsId: 'github-pat'
                     ]]
                 ])
