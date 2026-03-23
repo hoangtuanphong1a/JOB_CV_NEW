@@ -24,7 +24,7 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies with frozen lockfile for reproducible builds
-RUN pnpm install --frozen-lockfile --prod=false
+RUN pnpm install --frozen-lockfile
 
 # ---------- Builder Stage ----------
 FROM deps AS builder
