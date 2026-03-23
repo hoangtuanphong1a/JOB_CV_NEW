@@ -46,7 +46,7 @@ services:
 
   backend:
     image: ${DOCKER_REGISTRY}/${BACKEND_IMAGE_NAME}:latest
-    container_name: job-backend-1
+    container_name: job-cv-new-backend-1
     restart: unless-stopped
     environment:
       DB_HOST: mysql
@@ -74,7 +74,7 @@ services:
 
   frontend:
     image: ${DOCKER_REGISTRY}/${FRONTEND_IMAGE_NAME}:latest
-    container_name: job-frontend-1
+    container_name: job-cv-new-frontend-1
     restart: unless-stopped
     build:
       context: ./frontend
