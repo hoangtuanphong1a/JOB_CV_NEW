@@ -83,7 +83,7 @@ export default function AdminAnalyticsPage() {
 
   const fetchAnalyticsData = async () => {
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('token');
       if (!token) {
         router.push('/auth/login');
         return;
@@ -107,7 +107,7 @@ export default function AdminAnalyticsPage() {
 
   const exportReport = async (format: 'pdf' | 'csv' | 'excel') => {
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/analytics/export?format=${format}&period=${timeRange}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });

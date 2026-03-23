@@ -246,11 +246,10 @@ export function RegisterForm() {
       } else if (userRoles.includes('employer')) {
         window.location.href = '/dashboard/employer';
       } else if (userRoles.includes('job_seeker')) {
-        // Job seeker dashboard route
-        window.location.href = '/dashboard/candidate';
+        window.location.href = '/jobs';
       } else {
         // Default fallback for any other roles
-        window.location.href = '/dashboard/candidate';
+        window.location.href = '/jobs';
       }
 
     } catch (error) {

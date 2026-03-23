@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -19,26 +19,24 @@ import {
 
 import {
   ArrowLeft,
-  Mail,
-  Phone,
-  Calendar,
-  MapPin,
-  Download,
+  Search,
+  Filter,
+  Eye,
   MessageSquare,
+  Calendar,
   CheckCircle,
   XCircle,
   Clock,
-  Star,
-  Eye,
   User,
+  Mail,
+  Phone,
   FileText,
-  Briefcase,
-  GraduationCap,
-  Award,
-  ExternalLink,
+  Download,
+  Star,
+  StarOff,
 } from "lucide-react";
 
-interface ApplicantDetail {
+interface Applicant {
   id: string;
   name: string;
   email: string;
@@ -57,39 +55,30 @@ interface ApplicantDetail {
   coverLetter?: string;
   resumeUrl?: string;
   experience?: string;
-  education?: string;
   skills?: string[];
   rating?: number;
   lastActivity?: string;
-  // Additional profile information
-  bio?: string;
-  location?: string;
-  linkedin?: string;
-  github?: string;
-  portfolio?: string;
-  languages?: string[];
-  certifications?: string[];
 }
 
-export default function ApplicantDetailPage() {
+export default function EmployerApplicantsPage() {
   const router = useRouter();
-  const params = useParams();
-  const applicantId = params.id as string;
-
-  const [applicant, setApplicant] = useState<ApplicantDetail | null>(null);
+  const [applicants, setApplicants] = useState<Applicant[]>([]);
+  const [filteredApplicants, setFilteredApplicants] = useState<Applicant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-  const [statusUpdateNotes, setStatusUpdateNotes] = useState("");
-  const [newStatus, setNewStatus] = useState<string>("");
-  const [showInterviewDialog, setShowInterviewDialog] = useState(false);
-  const [interviewDate, setInterviewDate] = useState("");
-  const [interviewNotes, setInterviewNotes] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [jobFilter, setJobFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name">("newest");
 
   useEffect(() => {
-    fetchApplicantDetail();
-  }, [applicantId]);
+    fetchApplicants();
+  }, []);
 
-  const fetchApplicantDetail = async () => {
+  useEffect(() => {
+    filterAndSortApplicants();
+  }, [applicants, searchQuery, statusFilter, jobFilter, sortBy]);
+
+  const fetchApplicants = async () => {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) {
@@ -97,7 +86,6 @@ export default function ApplicantDetailPage() {
         return;
       }
 
-      // First get all applications to find the specific one
       const response = await fetch(
         `${
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
@@ -111,170 +99,86 @@ export default function ApplicantDetailPage() {
 
       if (response.ok) {
         const data = await response.json();
-        const applications = data.data || [];
-        const application = applications.find(
-          (app: any) => app.jobSeekerProfile?.user?.id === applicantId
-        );
-
-        if (application) {
-          const applicantDetail: ApplicantDetail = {
-            id: application.jobSeekerProfile?.user?.id || application.id,
-            name:
-              `${application.jobSeekerProfile?.user?.firstName || ""} ${
-                application.jobSeekerProfile?.user?.lastName || ""
-              }`.trim() || "Unknown",
-            email: application.jobSeekerProfile?.email || "",
-            phone: application.jobSeekerProfile?.phone || "",
-            jobTitle: application.job?.title || "Unknown Job",
-            jobId: application.jobId,
-            appliedDate: new Date(application.createdAt).toLocaleDateString(
-              "vi-VN"
-            ),
-            status: application.status,
-            avatar: application.jobSeekerProfile?.user?.avatar,
-            coverLetter: application.coverLetter,
-            resumeUrl: application.resumeUrl,
-            experience: application.jobSeekerProfile?.experience,
-            education: application.jobSeekerProfile?.education,
-            skills:
-              application.jobSeekerProfile?.skills?.map((s: any) => s.name) ||
-              [],
-            rating: application.rating || 0,
-            lastActivity: application.updatedAt
-              ? new Date(application.updatedAt).toLocaleDateString("vi-VN")
-              : undefined,
-            bio: application.jobSeekerProfile?.bio,
-            location: application.jobSeekerProfile?.location,
-            linkedin: application.jobSeekerProfile?.linkedin,
-            github: application.jobSeekerProfile?.github,
-            portfolio: application.jobSeekerProfile?.portfolio,
-            languages: application.jobSeekerProfile?.languages || [],
-            certifications: application.jobSeekerProfile?.certifications || [],
-          };
-          setApplicant(applicantDetail);
-        }
+        const applicantsData = data.data || [];
+        // Transform applications to applicant format
+        const transformedApplicants = applicantsData.map((app: any) => ({
+          id: app.jobSeekerProfile?.user?.id || app.id,
+          name:
+            `${app.jobSeekerProfile?.user?.firstName || ""} ${
+              app.jobSeekerProfile?.user?.lastName || ""
+            }`.trim() || "Unknown",
+          email: app.jobSeekerProfile?.email || "",
+          phone: app.jobSeekerProfile?.phone || "",
+          jobTitle: app.job?.title || "Unknown Job",
+          jobId: app.jobId,
+          appliedDate: new Date(app.createdAt).toLocaleDateString("vi-VN"),
+          status: app.status,
+          avatar: app.jobSeekerProfile?.user?.avatar,
+          coverLetter: app.coverLetter,
+          resumeUrl: app.resumeUrl,
+          experience: app.jobSeekerProfile?.experience,
+          skills: app.jobSeekerProfile?.skills?.map((s: any) => s.name) || [],
+          rating: app.rating || 0,
+          lastActivity: app.updatedAt
+            ? new Date(app.updatedAt).toLocaleDateString("vi-VN")
+            : null,
+        }));
+        setApplicants(transformedApplicants);
       }
     } catch (error) {
-      console.error("Error fetching applicant detail:", error);
+      console.error("Error fetching applicants:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const updateApplicationStatus = async () => {
-    if (!newStatus || !applicant) return;
+  const filterAndSortApplicants = () => {
+    let filtered = [...applicants];
 
-    setIsUpdatingStatus(true);
-    try {
-      const token = localStorage.getItem("access_token");
-      if (!token) return;
-
-      // Find the application ID first
-      const appsResponse = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
-        }/applications`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (applicant) =>
+          applicant.name.toLowerCase().includes(query) ||
+          applicant.jobTitle.toLowerCase().includes(query) ||
+          applicant.email.toLowerCase().includes(query)
       );
-
-      if (appsResponse.ok) {
-        const data = await appsResponse.json();
-        const applications = data.data || [];
-        const application = applications.find(
-          (app: any) => app.jobSeekerProfile?.user?.id === applicantId
-        );
-
-        if (application) {
-          const response = await fetch(
-            `${
-              process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
-            }/applications/${application.id}/status`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                status: newStatus,
-                notes: statusUpdateNotes,
-              }),
-            }
-          );
-
-          if (response.ok) {
-            setApplicant({ ...applicant, status: newStatus as any });
-            setNewStatus("");
-            setStatusUpdateNotes("");
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error updating status:", error);
-    } finally {
-      setIsUpdatingStatus(false);
     }
-  };
 
-  const scheduleInterview = async () => {
-    if (!interviewDate || !applicant) return;
-
-    try {
-      const token = localStorage.getItem("access_token");
-      if (!token) return;
-
-      // Find the application ID first
-      const appsResponse = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
-        }/applications`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+    // Status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(
+        (applicant) => applicant.status === statusFilter
       );
-
-      if (appsResponse.ok) {
-        const data = await appsResponse.json();
-        const applications = data.data || [];
-        const application = applications.find(
-          (app: any) => app.jobSeekerProfile?.user?.id === applicantId
-        );
-
-        if (application) {
-          const response = await fetch(
-            `${
-              process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
-            }/applications/${application.id}/interview`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                interviewDate: interviewDate,
-                notes: interviewNotes,
-              }),
-            }
-          );
-
-          if (response.ok) {
-            setApplicant({ ...applicant, status: "interviewed" });
-            setShowInterviewDialog(false);
-            setInterviewDate("");
-            setInterviewNotes("");
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error scheduling interview:", error);
     }
+
+    // Job filter
+    if (jobFilter !== "all") {
+      filtered = filtered.filter((applicant) => applicant.jobId === jobFilter);
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return (
+            new Date(b.appliedDate).getTime() -
+            new Date(a.appliedDate).getTime()
+          );
+        case "oldest":
+          return (
+            new Date(a.appliedDate).getTime() -
+            new Date(b.appliedDate).getTime()
+          );
+        case "name":
+          return a.name.localeCompare(b.name);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredApplicants(filtered);
   };
 
   const getStatusBadge = (status: string) => {
@@ -323,33 +227,23 @@ export default function ApplicantDetailPage() {
     );
   };
 
+  const getUniqueJobs = () => {
+    const jobs = [
+      ...new Set(applicants.map((a) => `${a.jobId}:${a.jobTitle}`)),
+    ];
+    return jobs.map((job) => {
+      const [id, title] = job.split(":");
+      return { id, title };
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="py-8">
         <div className="container mx-auto px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#f26b38] mx-auto"></div>
-            <p className="mt-4 text-gray-600">Đang tải thông tin ứng viên...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!applicant) {
-    return (
-      <div className="py-8">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Không tìm thấy thông tin ứng viên
-            </h3>
-            <Link href="/dashboard/employer/applicants">
-              <Button className="mt-4 bg-[#f26b38] hover:bg-[#e05a27]">
-                Quay lại danh sách
-              </Button>
-            </Link>
+            <p className="mt-4 text-gray-600">Đang tải danh sách ứng viên...</p>
           </div>
         </div>
       </div>
@@ -360,324 +254,241 @@ export default function ApplicantDetailPage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <div className="py-8">
-        <div className="container mx-auto px-4 max-w-6xl">
+        <div className="container mx-auto px-4">
           {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <Link href="/dashboard/employer/applicants">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Quay lại danh sách
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold">Chi tiết ứng viên</h1>
-              <p className="text-gray-600 mt-1">
-                Xem hồ sơ và quản lý trạng thái ứng tuyển
-              </p>
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard/employer">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Quay lại Dashboard
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-3xl font-bold">Quản lý ứng viên</h1>
+                <p className="text-gray-600 mt-1">
+                  Xem và quản lý tất cả ứng viên đã ứng tuyển
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Profile Header */}
-              <Card className="p-6">
-                <div className="flex items-start gap-6">
-                  <div className="h-20 w-20 rounded-full bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center text-xl font-bold text-[#f26b38]">
-                    {applicant.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()}
+          {/* Stats */}
+          <div className="grid md:grid-cols-4 gap-4 mb-8">
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <User className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">{applicants.length}</div>
+                  <div className="text-sm text-gray-600">Tổng ứng viên</div>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <Clock className="h-5 w-5 text-yellow-600" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">
+                    {applicants.filter((a) => a.status === "pending").length}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h2 className="text-2xl font-bold">{applicant.name}</h2>
-                      {getStatusBadge(applicant.status)}
-                    </div>
-                    <p className="text-gray-600 mb-3">
-                      Ứng tuyển vị trí:{" "}
-                      <span className="font-medium">{applicant.jobTitle}</span>
-                    </p>
-                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        <span>{applicant.email}</span>
-                      </div>
-                      {applicant.phone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4" />
-                          <span>{applicant.phone}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        <span>Ứng tuyển: {applicant.appliedDate}</span>
-                      </div>
-                      {applicant.location && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          <span>{applicant.location}</span>
-                        </div>
-                      )}
-                    </div>
+                  <div className="text-sm text-gray-600">Chờ duyệt</div>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Star className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">
+                    {
+                      applicants.filter((a) => a.status === "shortlisted")
+                        .length
+                    }
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Ứng viên tiềm năng
                   </div>
                 </div>
-              </Card>
-
-              {/* Cover Letter */}
-              {applicant.coverLetter && (
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Thư xin việc
-                  </h3>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-gray-700 whitespace-pre-wrap">
-                      {applicant.coverLetter}
-                    </p>
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">
+                    {applicants.filter((a) => a.status === "accepted").length}
                   </div>
-                </Card>
-              )}
+                  <div className="text-sm text-gray-600">Đã chấp nhận</div>
+                </div>
+              </div>
+            </Card>
+          </div>
 
-              {/* Experience */}
-              {applicant.experience && (
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <Briefcase className="h-5 w-5" />
-                    Kinh nghiệm
-                  </h3>
-                  <p className="text-gray-700">{applicant.experience}</p>
-                </Card>
-              )}
-
-              {/* Education */}
-              {applicant.education && (
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5" />
-                    Học vấn
-                  </h3>
-                  <p className="text-gray-700">{applicant.education}</p>
-                </Card>
-              )}
-
-              {/* Skills */}
-              {applicant.skills && applicant.skills.length > 0 && (
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Kỹ năng</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {applicant.skills.map((skill, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="px-3 py-1"
-                      >
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                </Card>
-              )}
-
-              {/* Languages */}
-              {applicant.languages && applicant.languages.length > 0 && (
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Ngôn ngữ</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {applicant.languages.map((language, index) => (
-                      <Badge
-                        key={index}
-                        variant="outline"
-                        className="px-3 py-1"
-                      >
-                        {language}
-                      </Badge>
-                    ))}
-                  </div>
-                </Card>
-              )}
-
-              {/* Certifications */}
-              {applicant.certifications &&
-                applicant.certifications.length > 0 && (
-                  <Card className="p-6">
-                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <Award className="h-5 w-5" />
-                      Chứng chỉ
-                    </h3>
-                    <ul className="space-y-2">
-                      {applicant.certifications.map((cert, index) => (
-                        <li
-                          key={index}
-                          className="flex items-center gap-2 text-gray-700"
-                        >
-                          <Award className="h-4 w-4 text-green-600 flex-shrink-0" />
-                          <span>{cert}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </Card>
-                )}
+          {/* Filters */}
+          <Card className="p-6 mb-8">
+            <div className="grid md:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Tìm kiếm ứng viên..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Trạng thái" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                  <SelectItem value="pending">Chờ duyệt</SelectItem>
+                  <SelectItem value="reviewing">Đang xem xét</SelectItem>
+                  <SelectItem value="shortlisted">
+                    Ứng viên tiềm năng
+                  </SelectItem>
+                  <SelectItem value="interviewed">Đã phỏng vấn</SelectItem>
+                  <SelectItem value="accepted">Đã chấp nhận</SelectItem>
+                  <SelectItem value="rejected">Đã từ chối</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={jobFilter} onValueChange={setJobFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Vị trí công việc" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả vị trí</SelectItem>
+                  {getUniqueJobs().map((job) => (
+                    <SelectItem key={job.id} value={job.id}>
+                      {job.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={sortBy}
+                onValueChange={(value: any) => setSortBy(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sắp xếp" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Mới nhất</SelectItem>
+                  <SelectItem value="oldest">Cũ nhất</SelectItem>
+                  <SelectItem value="name">Theo tên</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          </Card>
 
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Actions */}
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Hành động</h3>
-                <div className="space-y-3">
-                  {/* Quick Status Actions */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-700">
-                      Cập nhật trạng thái nhanh
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setNewStatus("reviewing")}
-                        className="text-xs"
-                      >
-                        Đang xem xét
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setNewStatus("shortlisted")}
-                        className="text-xs"
-                      >
-                        Ứng viên tiềm năng
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setNewStatus("accepted")}
-                        className="text-xs text-green-600 border-green-600"
-                      >
-                        Chấp nhận
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setNewStatus("rejected")}
-                        className="text-xs text-red-600 border-red-600"
-                      >
-                        Từ chối
-                      </Button>
-                    </div>
-                  </div>
-
-                  {newStatus && (
-                    <div className="space-y-2">
-                      <Textarea
-                        placeholder="Ghi chú (tùy chọn)"
-                        value={statusUpdateNotes}
-                        onChange={(e) => setStatusUpdateNotes(e.target.value)}
-                        className="text-sm"
-                        rows={3}
-                      />
-                      <Button
-                        onClick={updateApplicationStatus}
-                        disabled={isUpdatingStatus}
-                        className="w-full bg-[#f26b38] hover:bg-[#e05a27] text-sm"
-                      >
-                        {isUpdatingStatus
-                          ? "Đang cập nhật..."
-                          : `Cập nhật thành ${newStatus}`}
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Other Actions */}
-                  <div className="pt-4 border-t space-y-2">
-                    <Button variant="outline" className="w-full text-sm">
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Gửi tin nhắn
-                    </Button>
-
-                    {applicant.resumeUrl && (
-                      <Button variant="outline" className="w-full text-sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        Tải CV
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </Card>
-
-              {/* Social Links */}
-              {(applicant.linkedin ||
-                applicant.github ||
-                applicant.portfolio) && (
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Liên kết</h3>
-                  <div className="space-y-3">
-                    {applicant.linkedin && (
-                      <a
-                        href={applicant.linkedin}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        LinkedIn
-                      </a>
-                    )}
-                    {applicant.github && (
-                      <a
-                        href={applicant.github}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        GitHub
-                      </a>
-                    )}
-                    {applicant.portfolio && (
-                      <a
-                        href={applicant.portfolio}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-purple-600 hover:text-purple-800"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        Portfolio
-                      </a>
-                    )}
-                  </div>
-                </Card>
-              )}
-
-              {/* Application Timeline */}
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">
-                  Lịch sử ứng tuyển
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <div className="text-sm">
-                      <p className="font-medium">Đã ứng tuyển</p>
-                      <p className="text-gray-600">{applicant.appliedDate}</p>
-                    </div>
-                  </div>
-                  {applicant.lastActivity && (
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <div className="text-sm">
-                        <p className="font-medium">Hoạt động cuối</p>
-                        <p className="text-gray-600">
-                          {applicant.lastActivity}
+          {/* Applicants List */}
+          <div className="space-y-4">
+            {filteredApplicants.length > 0 ? (
+              filteredApplicants.map((applicant) => (
+                <Card
+                  key={applicant.id}
+                  className="p-6 hover:shadow-lg transition-shadow"
+                >
+                  <div className="flex items-start justify-between gap-6">
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center text-sm font-medium text-[#f26b38]">
+                        {applicant.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold">
+                            {applicant.name}
+                          </h3>
+                          {getStatusBadge(applicant.status)}
+                        </div>
+                        <p className="text-gray-600 mb-2">
+                          Ứng tuyển:{" "}
+                          <span className="font-medium">
+                            {applicant.jobTitle}
+                          </span>
                         </p>
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-3">
+                          <div className="flex items-center gap-1">
+                            <Mail className="h-4 w-4" />
+                            <span>{applicant.email}</span>
+                          </div>
+                          {applicant.phone && (
+                            <div className="flex items-center gap-1">
+                              <Phone className="h-4 w-4" />
+                              <span>{applicant.phone}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            <span>Ứng tuyển: {applicant.appliedDate}</span>
+                          </div>
+                        </div>
+                        {applicant.skills && applicant.skills.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {applicant.skills
+                              .slice(0, 3)
+                              .map((skill, index) => (
+                                <Badge
+                                  key={index}
+                                  variant="secondary"
+                                  className="text-xs"
+                                >
+                                  {skill}
+                                </Badge>
+                              ))}
+                            {applicant.skills.length > 3 && (
+                              <Badge variant="secondary" className="text-xs">
+                                +{applicant.skills.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                        {applicant.coverLetter && (
+                          <p className="text-sm text-gray-700 line-clamp-2 mb-3">
+                            {applicant.coverLetter}
+                          </p>
+                        )}
                       </div>
                     </div>
-                  )}
-                </div>
-              </Card>
-            </div>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/dashboard/employer/applicants/${applicant.id}`}
+                      >
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4 mr-2" />
+                          Xem chi tiết
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Không tìm thấy ứng viên nào
+                </h3>
+                <p className="text-gray-600">
+                  Thử điều chỉnh bộ lọc hoặc kiểm tra lại sau.
+                </p>
+              </div>
+            )}
           </div>
+
+          {/* Pagination would go here */}
         </div>
       </div>
       <Footer />

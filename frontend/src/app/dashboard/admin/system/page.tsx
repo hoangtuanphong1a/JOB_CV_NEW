@@ -86,7 +86,7 @@ export default function AdminSystemPage() {
 
   const fetchSystemData = async () => {
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('token');
       if (!token) {
         router.push('/auth/login');
         return;
@@ -186,7 +186,7 @@ export default function AdminSystemPage() {
 
   const runMaintenanceTask = async (taskId: string) => {
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/admin/system/maintenance', {
         method: 'POST',
         headers: {
@@ -231,7 +231,7 @@ export default function AdminSystemPage() {
 
   const exportLogs = async (format: 'txt' | 'json') => {
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/admin/system/logs/export?format=${format}&level=${selectedLogLevel}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });

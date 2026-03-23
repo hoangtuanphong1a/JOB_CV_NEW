@@ -29,11 +29,6 @@ RUN pnpm install --frozen-lockfile --prod=false
 # ---------- Builder Stage ----------
 FROM deps AS builder
 
-# This value is inlined into the frontend bundle at `next build` time
-# because it's a `NEXT_PUBLIC_*` env var used in client-side code.
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-
 # Copy source code
 COPY . .
 
@@ -57,12 +52,13 @@ ENV NODE_ENV=production
 
 # Copy Next.js build output
 COPY --from=builder --chown=nextjs:nodejs /app/next.config.ts ./
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
 COPY --from=builder --chown=nextjs:nodejs /app/pnpm-lock.yaml ./
 
 # Install production dependencies
-RUN pnpm install --frozen-lockfile \
+RUN pnpm install --prod --frozen-lockfile \
     && pnpm store prune
 
 # Switch to non-root user
