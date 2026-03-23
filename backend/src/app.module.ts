@@ -51,7 +51,7 @@ import { RolesGuard } from './modules/common/guards/roles.guard';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       entities: [join(__dirname, '**', '*.entity{.ts,.js}')],
-      synchronize: false, // Disabled for production stability
+      synchronize: true, // Disabled for production stability
       logging: process.env.NODE_ENV === 'development',
 
       // Connection pooling configuration
