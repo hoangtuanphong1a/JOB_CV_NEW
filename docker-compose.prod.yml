@@ -46,13 +46,14 @@ services:
 
   backend:
     image: ${DOCKER_REGISTRY}/${BACKEND_IMAGE_NAME}:latest
-    container_name: cv-king-backend
+    container_name: job-backend-1
     restart: unless-stopped
     environment:
       DB_HOST: mysql
       DB_PORT: 3306
       DB_NAME: ${MYSQL_DATABASE}
-      DB_USERNAME: ${MYSQL_USER}
+      # NestJS backend reads `process.env.DB_USER` (not `DB_USERNAME`)
+      DB_USER: ${MYSQL_USER}
       DB_PASSWORD: ${MYSQL_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: 24h
@@ -71,7 +72,7 @@ services:
 
   frontend:
     image: ${DOCKER_REGISTRY}/${FRONTEND_IMAGE_NAME}:latest
-    container_name: cv-king-frontend
+    container_name: job-frontend-1
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_API_URL: http://backend:3001

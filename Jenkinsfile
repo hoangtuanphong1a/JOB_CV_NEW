@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        BACKEND_IMAGE_NAME = "cv-king-backend-1"
-        FRONTEND_IMAGE_NAME = "cv-king-frontend-1"
+        BACKEND_IMAGE_NAME = "job-backend-1"
+        FRONTEND_IMAGE_NAME = "job-frontend-1"
         SERVER_HOST = "ec2-15-135-224-224.ap-southeast-2.compute.amazonaws.com"
         SERVER_USER = "ubuntu"
 

@@ -58,7 +58,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
 COPY --from=builder --chown=nextjs:nodejs /app/pnpm-lock.yaml ./
 
 # Install production dependencies
-RUN pnpm install --prod --frozen-lockfile \
+RUN pnpm install --frozen-lockfile \
     && pnpm store prune
 
 # Switch to non-root user
