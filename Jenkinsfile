@@ -50,7 +50,11 @@ pipeline {
                     docker build --no-cache --build-arg CACHE_BUST=${BUILD_NUMBER} -f backend/Dockerfile -t ${REGISTRY}/${BACKEND_IMAGE_NAME}:latest ./backend
 
                     echo "🚧 Build frontend..."
-                    docker build -f frontend/Dockerfile -t ${REGISTRY}/${FRONTEND_IMAGE_NAME}:latest ./frontend
+                    docker build --no-cache \
+                        --build-arg NEXT_PUBLIC_API_URL=http://${SERVER_HOST}:3001 \
+                        -f frontend/Dockerfile \
+                        -t ${REGISTRY}/${FRONTEND_IMAGE_NAME}:latest \
+                        ./frontend
 
                     echo "🔑 Đăng nhập Docker Hub..."
                     echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
