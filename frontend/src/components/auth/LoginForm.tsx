@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AuthService } from "@/services/authService";
 
 export function LoginForm() {
   const router = useRouter();
@@ -153,15 +154,85 @@ export function LoginForm() {
     try {
       console.log("Google login attempt");
 
-      // TODO: Implement Google OAuth with real client ID
-      // For demo purposes, simulate successful login
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Load Google OAuth script
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
 
-      // On success, redirect to jobs page for candidates
-      router.push("/jobs");
+      script.onload = () => {
+        // Initialize Google OAuth
+        interface GoogleAccounts {
+          accounts: {
+            id: {
+              initialize: (config: { client_id: string; callback: (response: { credential: string }) => void }) => void;
+              prompt: () => void;
+            };
+          };
+        }
+        const google = (window as unknown as { google?: GoogleAccounts }).google;
+        if (google) {
+          google.accounts.id.initialize({
+            client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID",
+            callback: async (response: { credential: string }) => {
+              try {
+                // Decode JWT token from Google
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+                
+                // Call backend Google auth API
+                const data = await AuthService.googleAuth({
+                  email: payload.email,
+                  googleId: payload.sub,
+                  firstName: payload.given_name,
+                  lastName: payload.family_name,
+                  avatar: payload.picture,
+                });
+
+                // Store access token
+                localStorage.setItem("access_token", data.access_token);
+
+                // Store user info if needed
+                if (data.user) {
+                  localStorage.setItem("user", JSON.stringify(data.user));
+                }
+
+                // Dispatch custom event to update header
+                window.dispatchEvent(new CustomEvent("userLogin"));
+
+                // Redirect based on user role
+                const userRoles = data.user?.roles || [];
+
+                if (userRoles.includes("admin")) {
+                  router.push("/dashboard/admin");
+                } else if (userRoles.includes("hr")) {
+                  router.push("/dashboard/hr");
+                } else if (userRoles.includes("employer")) {
+                  router.push("/dashboard/employer");
+                } else if (userRoles.includes("job_seeker")) {
+                  router.push("/jobs");
+                } else {
+                  router.push("/jobs");
+                }
+              } catch (error) {
+                console.error("Google login failed:", error);
+                alert("Đăng nhập Google thất bại. Vui lòng thử lại.");
+              }
+            },
+          });
+
+          // Prompt user to select account
+          google.accounts.id.prompt();
+        }
+      };
+
+      script.onerror = () => {
+        console.error("Failed to load Google OAuth script");
+        alert("Không thể tải Google OAuth. Vui lòng thử lại.");
+      };
     } catch (error) {
       console.error("Google login failed:", error);
-      // TODO: Show error message
+      alert("Đăng nhập Google thất bại. Vui lòng thử lại.");
     }
   };
 
@@ -471,12 +542,13 @@ export function LoginForm() {
                       Ghi nhớ đăng nhập
                     </label>
                   </div>
-                  <a
-                    href="#"
+                  <button
+                    type="button"
+                    onClick={() => router.push("/auth/forgot-password")}
                     className="text-sm text-orange-500 hover:underline font-medium"
                   >
                     Quên mật khẩu?
-                  </a>
+                  </button>
                 </div>
 
                 {/* Sign In Button */}

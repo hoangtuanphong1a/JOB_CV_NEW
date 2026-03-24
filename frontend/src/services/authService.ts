@@ -74,6 +74,21 @@ export class AuthService {
   static async resetPassword(token: string, newPassword: string): Promise<void> {
     await api.post('/auth/reset-password', { token, newPassword });
   }
+
+  static async googleAuth(data: {
+    email: string;
+    googleId: string;
+    firstName?: string;
+    lastName?: string;
+    avatar?: string;
+  }): Promise<AuthResponse> {
+    const response = await api.post('/auth/google', data);
+    return response.data;
+  }
+
+  static async resendVerification(email: string): Promise<void> {
+    await api.post('/auth/resend-verification', { email });
+  }
 }
 
 export default AuthService;
