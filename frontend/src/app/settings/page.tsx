@@ -140,22 +140,14 @@ export default function SettingsPage() {
 
   const handleSaveProfile = async () => {
     try {
-      // Prepare data for API call
+      // Prepare data for API call - include required fields
       const updateData: UpdateProfileData = {
         phone: formData.phone || undefined,
         bio: formData.bio || undefined,
-        address: formData.location || undefined, // Map location to address
+        location: formData.location || undefined, // Use location field name
+        email: formData.email || undefined,
+        fullName: formData.name || undefined,
       };
-
-      // Split name into firstName and lastName (simple split by space)
-      const nameParts = formData.name.trim().split(' ');
-      if (nameParts.length > 1) {
-        updateData.lastName = nameParts.pop() || '';
-        updateData.firstName = nameParts.join(' ');
-      } else {
-        updateData.firstName = formData.name;
-        updateData.lastName = '';
-      }
 
       // Call the backend API to update profile
       const updatedUser = await UserService.updateProfile(updateData);

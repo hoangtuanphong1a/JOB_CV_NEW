@@ -16,6 +16,9 @@ export interface UpdateProfileData {
   linkedinUrl?: string;
   githubUrl?: string;
   portfolioUrl?: string;
+  email?: string;
+  fullName?: string;
+  location?: string;
 }
 
 export interface JobSeekerProfile extends User {
@@ -48,7 +51,7 @@ export class UserService {
   }
 
   static async updateProfile(data: UpdateProfileData): Promise<User> {
-    const response = await api.put('/users/profile', data);
+    const response = await api.put('/users/profile/me', data);
     return response.data;
   }
 
@@ -65,7 +68,7 @@ export class UserService {
   }
 
   static async changePassword(data: { currentPassword: string; newPassword: string }): Promise<void> {
-    await api.post('/users/change-password', data);
+    await api.post('/users/profile/me/change-password', data);
   }
 
   static async deleteAccount(): Promise<void> {

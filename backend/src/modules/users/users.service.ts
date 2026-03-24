@@ -123,25 +123,56 @@ export class UsersService {
     const user = await this.findOne(id);
 
     // Check if user can update (only admin or self)
-    const currentUser = await this.findOne(currentUserId);
     const isAdmin = await this.hasRole(currentUserId, RoleName.ADMIN);
 
     if (!isAdmin && currentUserId !== id) {
       throw new ForbiddenException('You can only update your own profile');
     }
 
+    // Prepare update data with proper field mapping
+    const updateData: any = {};
+    
+    // Map fullName to firstName and lastName
+    if (updateUserDto.fullName) {
+      const nameParts = updateUserDto.fullName.trim().split(' ');
+      if (nameParts.length > 0) {
+        updateData.firstName = nameParts[0];
+        if (nameParts.length > 1) {
+          updateData.lastName = nameParts.slice(1).join(' ');
+        }
+      }
+    }
+    
+    // Map location to address
+    if (updateUserDto.location) {
+      updateData.address = updateUserDto.location;
+    }
+    
+    // Map bio to summary
+    if (updateUserDto.bio) {
+      updateData.summary = updateUserDto.bio;
+    }
+    
+    // Map other fields directly
+    if (updateUserDto.email) updateData.email = updateUserDto.email;
+    if (updateUserDto.phone) updateData.phone = updateUserDto.phone;
+    if (updateUserDto.avatar) updateData.avatar = updateUserDto.avatar;
+    if (updateUserDto.website) updateData.website = updateUserDto.website;
+    if (updateUserDto.linkedinUrl) updateData.linkedinUrl = updateUserDto.linkedinUrl;
+    if (updateUserDto.githubUrl) updateData.githubUrl = updateUserDto.githubUrl;
+    if (updateUserDto.isActive !== undefined) updateData.isActive = updateUserDto.isActive;
+
     // Hash password if provided
-    const updateData = { ...updateUserDto };
     if (updateUserDto.password) {
       updateData.password = await bcrypt.hash(updateUserDto.password, 12);
     }
 
-    await this.userRepository.update(id, updateData);
-
-    // Update role if provided
-    if (updateUserDto.role) {
+    // Only update role if explicitly provided and user is admin
+    if (updateUserDto.role && isAdmin) {
       await this.updateUserRole(id, updateUserDto.role);
     }
+
+    await this.userRepository.update(id, updateData);
 
     return this.findOne(id);
   }
