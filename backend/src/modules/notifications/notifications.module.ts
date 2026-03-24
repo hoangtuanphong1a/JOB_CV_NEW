@@ -10,11 +10,12 @@ import { Notification } from '../common/entities/notification.entity';
 import { User } from '../common/entities/user.entity';
 import { Role } from '../common/entities/role.entity';
 import { UserRole } from '../common/entities/user-role.entity';
+import { JobSeekerProfile } from '../common/entities/job-seeker-profile.entity';
 import { UsersService } from '../users/users.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Notification, User, Role, UserRole]),
+    TypeOrmModule.forFeature([Notification, User, Role, UserRole, JobSeekerProfile]),
     ConfigModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-secret-key',

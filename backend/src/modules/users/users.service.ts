@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { User } from '../common/entities/user.entity';
 import { Role, RoleName } from '../common/entities/role.entity';
 import { UserRole } from '../common/entities/user-role.entity';
+import { JobSeekerProfile } from '../common/entities/job-seeker-profile.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcryptjs';
@@ -22,6 +23,8 @@ export class UsersService {
     private roleRepository: Repository<Role>,
     @InjectRepository(UserRole)
     private userRoleRepository: Repository<UserRole>,
+    @InjectRepository(JobSeekerProfile)
+    private jobSeekerProfileRepository: Repository<JobSeekerProfile>,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -129,7 +132,7 @@ export class UsersService {
       throw new ForbiddenException('You can only update your own profile');
     }
 
-    // Prepare update data with proper field mapping
+    // Prepare update data for User entity
     const updateData: any = {};
     
     // Map fullName to firstName and lastName
@@ -139,21 +142,13 @@ export class UsersService {
         updateData.firstName = nameParts[0];
         if (nameParts.length > 1) {
           updateData.lastName = nameParts.slice(1).join(' ');
+        } else {
+          updateData.lastName = '';
         }
       }
     }
     
-    // Map location to address
-    if (updateUserDto.location) {
-      updateData.address = updateUserDto.location;
-    }
-    
-    // Map bio to summary
-    if (updateUserDto.bio) {
-      updateData.summary = updateUserDto.bio;
-    }
-    
-    // Map other fields directly
+    // Map other fields directly to User entity
     if (updateUserDto.email) updateData.email = updateUserDto.email;
     if (updateUserDto.phone) updateData.phone = updateUserDto.phone;
     if (updateUserDto.avatar) updateData.avatar = updateUserDto.avatar;
@@ -167,12 +162,36 @@ export class UsersService {
       updateData.password = await bcrypt.hash(updateUserDto.password, 12);
     }
 
+    // Update User entity if there are fields to update
+    if (Object.keys(updateData).length > 0) {
+      await this.userRepository.update(id, updateData);
+    }
+
+    // Update JobSeekerProfile bio/summary if provided
+    if (updateUserDto.bio) {
+      // Check if user has a JobSeekerProfile
+      const jobSeekerProfile = await this.jobSeekerProfileRepository.findOne({
+        where: { userId: id },
+      });
+
+      if (jobSeekerProfile) {
+        // Update existing profile
+        await this.jobSeekerProfileRepository.update(jobSeekerProfile.id, {
+          summary: updateUserDto.bio,
+        });
+      } else {
+        // Create new profile if it doesn't exist
+        await this.jobSeekerProfileRepository.save({
+          userId: id,
+          summary: updateUserDto.bio,
+        });
+      }
+    }
+
     // Only update role if explicitly provided and user is admin
     if (updateUserDto.role && isAdmin) {
       await this.updateUserRole(id, updateUserDto.role);
     }
-
-    await this.userRepository.update(id, updateData);
 
     return this.findOne(id);
   }

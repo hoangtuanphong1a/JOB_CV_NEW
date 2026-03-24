@@ -137,10 +137,10 @@ export function LoginForm() {
       } else if (userRoles.includes("employer")) {
         router.push("/dashboard/employer");
       } else if (userRoles.includes("job_seeker")) {
-        router.push("/jobs");
+        router.push("/");
       } else {
         // Default fallback for any other roles
-        router.push("/jobs");
+        router.push("/");
       }
     } catch (error) {
       console.error("Login failed:", error);
@@ -210,9 +210,9 @@ export function LoginForm() {
                 } else if (userRoles.includes("employer")) {
                   router.push("/dashboard/employer");
                 } else if (userRoles.includes("job_seeker")) {
-                  router.push("/jobs");
+                  router.push("/");
                 } else {
-                  router.push("/jobs");
+                  router.push("/");
                 }
               } catch (error) {
                 console.error("Google login failed:", error);

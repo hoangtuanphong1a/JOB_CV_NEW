@@ -19,6 +19,7 @@ import {
   Heart,
   Bell,
   MessageCircle,
+  Camera,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -40,6 +41,7 @@ const Header = () => {
     email?: string;
     userType?: string;
     roles?: string[];
+    avatar?: string;
   } | null>(null);
 
   // Update auth state when component mounts or when localStorage changes
@@ -107,166 +109,17 @@ const Header = () => {
           href: "/jobs?category=marketing",
           icon: TrendingUp,
         },
-        { name: "Quản lí việc làm", href: "/jobs/manage", icon: Briefcase },
-        { name: "Việc làm đã lưu", href: "/saved-jobs", icon: Heart },
-        {
-          name: "Việc làm đã ứng tuyển",
-          href: "/jobs/applied",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm chờ ứng tuyển",
-          href: "/jobs/pending",
-          icon: Briefcase,
-        },
+        { name: "Việc làm Kế Toán", href: "/jobs?category=accounting", icon: Briefcase },
+        { name: "Việc làm Tài Chính", href: "/jobs?category=finance", icon: Briefcase },
+        { name: "Việc làm Kinh Doanh", href: "/jobs?category=sales", icon: Briefcase },
+        { name: "Việc làm Nhân Sự", href: "/jobs?category=hr", icon: Briefcase },
+        { name: "Việc làm Xây Dựng", href: "/jobs?category=construction", icon: Briefcase },
+        { name: "Việc làm Y Tế", href: "/jobs?category=healthcare", icon: Briefcase },
+        { name: "Việc làm Giáo Dục", href: "/jobs?category=education", icon: Briefcase },
+        { name: "Việc làm Luật", href: "/jobs?category=legal", icon: Briefcase },
         {
           name: "Việc theo ngành nghề",
           href: "/jobs/categories",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Công Nghệ Thông Tin",
-          href: "/jobs?category=it",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Kế Toán/Kiểm Toán",
-          href: "/jobs?category=accounting",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Tài Chính/Ngân Hàng",
-          href: "/jobs?category=finance",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Hành Chính/Văn Phòng",
-          href: "/jobs?category=admin",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Kinh Doanh/Bán Hàng",
-          href: "/jobs?category=sales",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Marketing/Quảng Cáo",
-          href: "/jobs?category=marketing",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Xây Dựng/Kiến Trúc",
-          href: "/jobs?category=construction",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Y Tế/Dược",
-          href: "/jobs?category=healthcare",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Giáo Dục/Đào Tạo",
-          href: "/jobs?category=education",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Nhân Sự",
-          href: "/jobs?category=hr",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Luật/Pháp Lý",
-          href: "/jobs?category=legal",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Bán Hàng",
-          href: "/jobs?category=sales",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Kỹ Thuật",
-          href: "/jobs?category=engineering",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Dịch Vụ",
-          href: "/jobs?category=services",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Nghệ Thuật/Thiết Kế",
-          href: "/jobs?category=art",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Du Lịch/Khách Sạn",
-          href: "/jobs?category=hotel",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Bất Động Sản",
-          href: "/jobs?category=realestate",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Bảo Hiểm",
-          href: "/jobs?category=insurance",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Ngân Hàng",
-          href: "/jobs?category=banking",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Xuất Nhập Khẩu",
-          href: "/jobs?category=importexport",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Logistic/Vận Tải",
-          href: "/jobs?category=logistics",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Nông Lâm/Ngư Nghiệp",
-          href: "/jobs?category=agriculture",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Cơ Khí/Chế Tạo",
-          href: "/jobs?category=mechanical",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Điện/Điện Tử",
-          href: "/jobs?category=electronics",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Dầu Khí/Hóa Chất",
-          href: "/jobs?category=chemical",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Thời Trang/Mỹ Phẩm",
-          href: "/jobs?category=fashion",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Báo Chí/Truyền Thông",
-          href: "/jobs?category=media",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Thể Thao/Vận Động",
-          href: "/jobs?category=sports",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Công Viên/Nghĩa Trang",
-          href: "/jobs?category=cemetery",
           icon: Briefcase,
         },
         {
@@ -280,13 +133,13 @@ const Header = () => {
           icon: Briefcase,
         },
         {
-          name: "Việc làm tại Đà Nẵng",
-          href: "/jobs?location=danang",
+          name: "Việc làm tại Hà Nội",
+          href: "/jobs?location=hanoi",
           icon: Briefcase,
         },
         {
-          name: "Việc làm tại Hà Nội",
-          href: "/jobs?location=hanoi",
+          name: "Việc làm tại Đà Nẵng",
+          href: "/jobs?location=danang",
           icon: Briefcase,
         },
         {
@@ -297,306 +150,6 @@ const Header = () => {
         {
           name: "Việc làm tại Bình Dương",
           href: "/jobs?location=binhduong",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Đắk Lắk",
-          href: "/jobs?location=daklak",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Hải Phòng",
-          href: "/jobs?location=haiphong",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại An Giang",
-          href: "/jobs?location=angiang",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Bà Rịa - Vũng Tàu",
-          href: "/jobs?location=vungtau",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Bắc Giang",
-          href: "/jobs?location=bacgiang",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Bắc Kạn",
-          href: "/jobs?location=bacan",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Bạc Liêu",
-          href: "/jobs?location=baclieu",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Bắc Ninh",
-          href: "/jobs?location=bacninh",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Bến Tre",
-          href: "/jobs?location=bentre",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Bình Định",
-          href: "/jobs?location=binhdinh",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Bình Phước",
-          href: "/jobs?location=binhphuoc",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Bình Thuận",
-          href: "/jobs?location=binhthuan",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Cà Mau",
-          href: "/jobs?location=camau",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Cao Bằng",
-          href: "/jobs?location=caobang",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Đắk Nông",
-          href: "/jobs?location=daknong",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Điện Biên",
-          href: "/jobs?location=dienbien",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Đồng Nai",
-          href: "/jobs?location=donai",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Đồng Tháp",
-          href: "/jobs?location=dongthap",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Gia Lai",
-          href: "/jobs?location=gialai",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Hà Giang",
-          href: "/jobs?location=hagiang",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Hà Nam",
-          href: "/jobs?location=hanam",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Hà Tĩnh",
-          href: "/jobs?location=hatinh",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Hải Dương",
-          href: "/jobs?location=haiduong",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Hậu Giang",
-          href: "/jobs?location=haugiang",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Hòa Bình",
-          href: "/jobs?location=hoabinh",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Hưng Yên",
-          href: "/jobs?location=hungyen",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Khánh Hòa",
-          href: "/jobs?location=khanhhoa",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Kiên Giang",
-          href: "/jobs?location=kiengiang",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Kon Tum",
-          href: "/jobs?location=kontum",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Lai Châu",
-          href: "/jobs?location=laichau",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Lâm Đồng",
-          href: "/jobs?location=lamdong",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Lạng Sơn",
-          href: "/jobs?location=langson",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Lào Cai",
-          href: "/jobs?location=laocai",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Long An",
-          href: "/jobs?location=longan",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Nam Định",
-          href: "/jobs?location=namdinh",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Nghệ An",
-          href: "/jobs?location=nghean",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Ninh Bình",
-          href: "/jobs?location=ninhbinh",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Ninh Thuận",
-          href: "/jobs?location=ninhthuan",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Phú Thọ",
-          href: "/jobs?location=phutho",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Phú Yên",
-          href: "/jobs?location=phuyen",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Quảng Bình",
-          href: "/jobs?location=quangbinh",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Quảng Nam",
-          href: "/jobs?location=quangnam",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Quảng Ngãi",
-          href: "/jobs?location=quangngai",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Quảng Ninh",
-          href: "/jobs?location=quangninh",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Quảng Trị",
-          href: "/jobs?location=quangtri",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Sóc Trăng",
-          href: "/jobs?location=soctrang",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Sơn La",
-          href: "/jobs?location=sonla",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Tây Ninh",
-          href: "/jobs?location=tayninh",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Thái Bình",
-          href: "/jobs?location=thaibinh",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Thái Nguyên",
-          href: "/jobs?location=thainguyen",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Thanh Hóa",
-          href: "/jobs?location=thanhhoa",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Thừa Thiên Huế",
-          href: "/jobs?location=thuathienhue",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Tiền Giang",
-          href: "/jobs?location=tiengiang",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Trà Vinh",
-          href: "/jobs?location=travinh",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Tuyên Quang",
-          href: "/jobs?location=tuyenquang",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Vĩnh Long",
-          href: "/jobs?location=vinhlong",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Vĩnh Phúc",
-          href: "/jobs?location=vinhphuc",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Yên Bái",
-          href: "/jobs?location=yenbai",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Nước Ngoài",
-          href: "/jobs?location=abroad",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc theo nhu cầu",
-          href: "/jobs/requirements",
           icon: Briefcase,
         },
         {
@@ -621,16 +174,6 @@ const Header = () => {
           icon: Briefcase,
         },
         {
-          name: "Việc làm Phổ thông",
-          href: "/jobs?level=general",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Sinh viên",
-          href: "/jobs?experience=student",
-          icon: Briefcase,
-        },
-        {
           name: "Việc làm Mới tốt nghiệp",
           href: "/jobs?experience=fresh",
           icon: Briefcase,
@@ -651,11 +194,6 @@ const Header = () => {
           icon: Briefcase,
         },
         {
-          name: "Việc làm Bán thời gian",
-          href: "/jobs?type=parttime",
-          icon: Briefcase,
-        },
-        {
           name: "Việc làm Toàn thời gian",
           href: "/jobs?type=fulltime",
           icon: Briefcase,
@@ -668,137 +206,6 @@ const Header = () => {
         {
           name: "Việc làm Nghề tự do",
           href: "/jobs?type=freelance",
-          icon: Briefcase,
-        },
-        { name: "Việc làm Theo ca", href: "/jobs?type=shift", icon: Briefcase },
-        {
-          name: "Việc làm Theo giờ",
-          href: "/jobs?type=hourly",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo dự án",
-          href: "/jobs?type=project",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo mùa",
-          href: "/jobs?type=seasonal",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo tuần",
-          href: "/jobs?type=weekly",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo tháng",
-          href: "/jobs?type=monthly",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo năm",
-          href: "/jobs?type=yearly",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo ngày",
-          href: "/jobs?type=daily",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ hành chính",
-          href: "/jobs?type=office",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca đêm",
-          href: "/jobs?type=night",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca sáng",
-          href: "/jobs?type=morning",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca chiều",
-          href: "/jobs?type=afternoon",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca tối",
-          href: "/jobs?type=evening",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca sáng-tối",
-          href: "/jobs?type=morning_evening",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca sáng-chiều",
-          href: "/jobs?type=morning_afternoon",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca chiều-tối",
-          href: "/jobs?type=afternoon_evening",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca sáng-chiều-tối",
-          href: "/jobs?type=morning_afternoon_evening",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca sáng-tối-sáng",
-          href: "/jobs?type=morning_evening_morning",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca sáng-chiều-tối-sáng",
-          href: "/jobs?type=morning_afternoon_evening_morning",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca sáng-chiều-tối-sáng-chiều",
-          href: "/jobs?type=morning_afternoon_evening_morning_afternoon",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca sáng-chiều-tối-sáng-chiều-tối",
-          href: "/jobs?type=morning_afternoon_evening_morning_afternoon_evening",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca sáng-chiều-tối-sáng-chiều-tối-sáng",
-          href: "/jobs?type=morning_afternoon_evening_morning_afternoon_evening_morning",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca sáng-chiều-tối-sáng-chiều-tối-sáng-chiều",
-          href: "/jobs?type=morning_afternoon_evening_morning_afternoon_evening_morning_afternoon",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca sáng-chiều-tối-sáng-chiều-tối-sáng-chiều-tối",
-          href: "/jobs?type=morning_afternoon_evening_morning_afternoon_evening_morning_afternoon_evening",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca sáng-chiều-tối-sáng-chiều-tối-sáng-chiều-tối-sáng",
-          href: "/jobs?type=morning_afternoon_evening_morning_afternoon_evening_morning_afternoon_evening_morning",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca sáng-chiều-tối-sáng-chiều-tối-sáng-chiều-tối-sáng-chiều",
-          href: "/jobs?type=morning_afternoon_evening_morning_afternoon_evening_morning_afternoon_evening_morning_afternoon",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Theo giờ ca sáng-chiều-tối-sáng-chiều-tối-sáng-chiều-tối-sáng-chiều-tối",
-          href: "/jobs?type=morning_afternoon_evening_morning_afternoon_evening_morning_afternoon_evening_morning_afternoon_evening",
           icon: Briefcase,
         },
       ],
@@ -898,16 +305,6 @@ const Header = () => {
           icon: Building2,
         },
         {
-          name: "Thủy sản",
-          href: "/companies?industry=aquaculture",
-          icon: Building2,
-        },
-        {
-          name: "Lâm nghiệp",
-          href: "/companies?industry=forestry",
-          icon: Building2,
-        },
-        {
           name: "Khai khoáng",
           href: "/companies?industry=mining",
           icon: Building2,
@@ -946,383 +343,6 @@ const Header = () => {
         {
           name: "Truyền thông",
           href: "/companies?industry=media",
-          icon: Building2,
-        },
-        {
-          name: "Xuất bản",
-          href: "/companies?industry=publishing",
-          icon: Building2,
-        },
-        {
-          name: "Phần mềm",
-          href: "/companies?industry=software",
-          icon: Building2,
-        },
-        {
-          name: "Phần cứng",
-          href: "/companies?industry=hardware",
-          icon: Building2,
-        },
-        {
-          name: "Viễn thông",
-          href: "/companies?industry=telecom",
-          icon: Building2,
-        },
-        {
-          name: "Internet",
-          href: "/companies?industry=internet",
-          icon: Building2,
-        },
-        { name: "Game", href: "/companies?industry=game", icon: Building2 },
-        {
-          name: "E-commerce",
-          href: "/companies?industry=ecommerce",
-          icon: Building2,
-        },
-        {
-          name: "Fintech",
-          href: "/companies?industry=fintech",
-          icon: Building2,
-        },
-        { name: "Edtech", href: "/companies?industry=edtech", icon: Building2 },
-        {
-          name: "Healthtech",
-          href: "/companies?industry=healthtech",
-          icon: Building2,
-        },
-        {
-          name: "AgriTech",
-          href: "/companies?industry=agritech",
-          icon: Building2,
-        },
-        {
-          name: "PropTech",
-          href: "/companies?industry=proptech",
-          icon: Building2,
-        },
-        {
-          name: "LogiTech",
-          href: "/companies?industry=logitech",
-          icon: Building2,
-        },
-        {
-          name: "InsurTech",
-          href: "/companies?industry=insurtech",
-          icon: Building2,
-        },
-        {
-          name: "LegalTech",
-          href: "/companies?industry=legaltech",
-          icon: Building2,
-        },
-        {
-          name: "GovTech",
-          href: "/companies?industry=govtech",
-          icon: Building2,
-        },
-        {
-          name: "CleanTech",
-          href: "/companies?industry=cleantech",
-          icon: Building2,
-        },
-        {
-          name: "Greentech",
-          href: "/companies?industry=greentech",
-          icon: Building2,
-        },
-        {
-          name: "Cleantech",
-          href: "/companies?industry=cleantech",
-          icon: Building2,
-        },
-        {
-          name: "Renewable Energy",
-          href: "/companies?industry=renewable",
-          icon: Building2,
-        },
-        {
-          name: "Solar Energy",
-          href: "/companies?industry=solar",
-          icon: Building2,
-        },
-        {
-          name: "Wind Energy",
-          href: "/companies?industry=wind",
-          icon: Building2,
-        },
-        {
-          name: "Hydro Energy",
-          href: "/companies?industry=hydro",
-          icon: Building2,
-        },
-        {
-          name: "Geothermal Energy",
-          href: "/companies?industry=geothermal",
-          icon: Building2,
-        },
-        {
-          name: "Biomass Energy",
-          href: "/companies?industry=biomass",
-          icon: Building2,
-        },
-        {
-          name: "Biofuel Energy",
-          href: "/companies?industry=biofuel",
-          icon: Building2,
-        },
-        {
-          name: "Hydrogen Energy",
-          href: "/companies?industry=hydrogen",
-          icon: Building2,
-        },
-        {
-          name: "Fuel Cell Energy",
-          href: "/companies?industry=fuelcell",
-          icon: Building2,
-        },
-        {
-          name: "Battery Energy",
-          href: "/companies?industry=battery",
-          icon: Building2,
-        },
-        {
-          name: "Storage Energy",
-          href: "/companies?industry=storage",
-          icon: Building2,
-        },
-        {
-          name: "Smart Grid Energy",
-          href: "/companies?industry=smartgrid",
-          icon: Building2,
-        },
-        {
-          name: "Microgrid Energy",
-          href: "/companies?industry=microgrid",
-          icon: Building2,
-        },
-        {
-          name: "Distributed Energy",
-          href: "/companies?industry=distributed",
-          icon: Building2,
-        },
-        {
-          name: "Centralized Energy",
-          href: "/companies?industry=centralized",
-          icon: Building2,
-        },
-        {
-          name: "Grid Energy",
-          href: "/companies?industry=grid",
-          icon: Building2,
-        },
-        {
-          name: "Off-grid Energy",
-          href: "/companies?industry=offgrid",
-          icon: Building2,
-        },
-        {
-          name: "On-grid Energy",
-          href: "/companies?industry=ongrid",
-          icon: Building2,
-        },
-        {
-          name: "Hybrid Energy",
-          href: "/companies?industry=hybrid",
-          icon: Building2,
-        },
-        {
-          name: "Renewable Hybrid Energy",
-          href: "/companies?industry=renewable_hybrid",
-          icon: Building2,
-        },
-        {
-          name: "Non-renewable Hybrid Energy",
-          href: "/companies?industry=nonrenewable_hybrid",
-          icon: Building2,
-        },
-        {
-          name: "Fossil Fuel Energy",
-          href: "/companies?industry=fossil",
-          icon: Building2,
-        },
-        {
-          name: "Coal Energy",
-          href: "/companies?industry=coal",
-          icon: Building2,
-        },
-        {
-          name: "Oil Energy",
-          href: "/companies?industry=oil",
-          icon: Building2,
-        },
-        {
-          name: "Gas Energy",
-          href: "/companies?industry=gas",
-          icon: Building2,
-        },
-        {
-          name: "Nuclear Energy",
-          href: "/companies?industry=nuclear",
-          icon: Building2,
-        },
-        {
-          name: "Thermal Energy",
-          href: "/companies?industry=thermal",
-          icon: Building2,
-        },
-        {
-          name: "Kinetic Energy",
-          href: "/companies?industry=kinetic",
-          icon: Building2,
-        },
-        {
-          name: "Potential Energy",
-          href: "/companies?industry=potential",
-          icon: Building2,
-        },
-        {
-          name: "Chemical Energy",
-          href: "/companies?industry=chemical",
-          icon: Building2,
-        },
-        {
-          name: "Electrical Energy",
-          href: "/companies?industry=electrical",
-          icon: Building2,
-        },
-        {
-          name: "Magnetic Energy",
-          href: "/companies?industry=magnetic",
-          icon: Building2,
-        },
-        {
-          name: "Radiant Energy",
-          href: "/companies?industry=radiant",
-          icon: Building2,
-        },
-        {
-          name: "Sound Energy",
-          href: "/companies?industry=sound",
-          icon: Building2,
-        },
-        {
-          name: "Mechanical Energy",
-          href: "/companies?industry=mechanical",
-          icon: Building2,
-        },
-        {
-          name: "Heat Energy",
-          href: "/companies?industry=heat",
-          icon: Building2,
-        },
-        {
-          name: "Light Energy",
-          href: "/companies?industry=light",
-          icon: Building2,
-        },
-        {
-          name: "Solar Light Energy",
-          href: "/companies?industry=solar_light",
-          icon: Building2,
-        },
-        {
-          name: "LED Light Energy",
-          href: "/companies?industry=led",
-          icon: Building2,
-        },
-        {
-          name: "Laser Light Energy",
-          href: "/companies?industry=laser",
-          icon: Building2,
-        },
-        {
-          name: "UV Light Energy",
-          href: "/companies?industry=uv",
-          icon: Building2,
-        },
-        {
-          name: "IR Light Energy",
-          href: "/companies?industry=ir",
-          icon: Building2,
-        },
-        {
-          name: "X-ray Light Energy",
-          href: "/companies?industry=xray",
-          icon: Building2,
-        },
-        {
-          name: "Gamma Light Energy",
-          href: "/companies?industry=gamma",
-          icon: Building2,
-        },
-        {
-          name: "Cosmic Light Energy",
-          href: "/companies?industry=cosmic",
-          icon: Building2,
-        },
-        {
-          name: "Radio Light Energy",
-          href: "/companies?industry=radio",
-          icon: Building2,
-        },
-        {
-          name: "Microwave Light Energy",
-          href: "/companies?industry=microwave",
-          icon: Building2,
-        },
-        {
-          name: "Infrared Light Energy",
-          href: "/companies?industry=infrared",
-          icon: Building2,
-        },
-        {
-          name: "Visible Light Energy",
-          href: "/companies?industry=visible",
-          icon: Building2,
-        },
-        {
-          name: "Ultraviolet Light Energy",
-          href: "/companies?industry=ultraviolet",
-          icon: Building2,
-        },
-        {
-          name: "X-ray Light Energy",
-          href: "/companies?industry=xray",
-          icon: Building2,
-        },
-        {
-          name: "Gamma Light Energy",
-          href: "/companies?industry=gamma",
-          icon: Building2,
-        },
-        {
-          name: "Cosmic Light Energy",
-          href: "/companies?industry=cosmic",
-          icon: Building2,
-        },
-        {
-          name: "Radio Light Energy",
-          href: "/companies?industry=radio",
-          icon: Building2,
-        },
-        {
-          name: "Microwave Light Energy",
-          href: "/companies?industry=microwave",
-          icon: Building2,
-        },
-        {
-          name: "Infrared Light Energy",
-          href: "/companies?industry=infrared",
-          icon: Building2,
-        },
-        {
-          name: "Visible Light Energy",
-          href: "/companies?industry=visible",
-          icon: Building2,
-        },
-        {
-          name: "Ultraviolet Light Energy",
-          href: "/companies?industry=ultraviolet",
           icon: Building2,
         },
       ],
@@ -1687,6 +707,16 @@ const Header = () => {
                   <MessageCircle className="h-5 w-5 text-gray-600" />
                 </Button>
 
+                {/* Favorite Jobs Icon */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleNavigation("/saved-jobs")}
+                  className="relative p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <Heart className="h-5 w-5 text-gray-600" />
+                </Button>
+
                 {/* Avatar Button */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -1695,9 +725,17 @@ const Header = () => {
                       size="sm"
                       className="flex items-center space-x-2 p-1 rounded-full hover:bg-gray-100"
                     >
-                      <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                        {(user?.name || "U").charAt(0).toUpperCase()}
-                      </div>
+                      {user?.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt="Avatar"
+                          className="w-8 h-8 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                          {(user?.name || "U").charAt(0).toUpperCase()}
+                        </div>
+                      )}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64">
@@ -1718,11 +756,14 @@ const Header = () => {
                     </div>
 
                     <DropdownMenuItem
-                      onClick={() => handleNavigation(getDashboardRoute())}
+                      onClick={() => handleNavigation("/dashboard/user")}
                       className="cursor-pointer"
                     >
                       <Settings className="h-4 w-4 mr-2" />
-                      Dashboard
+                      {user?.roles?.includes("admin") ? "Quản trị hệ thống" : 
+                       user?.roles?.includes("hr") ? "Quản lý tuyển dụng" : 
+                       user?.roles?.includes("employer") ? "Quản lý doanh nghiệp" : 
+                       user?.roles?.includes("job_seeker") ? "Hồ sơ ứng viên" : "Dashboard"}
                     </DropdownMenuItem>
 
                     {user?.roles?.includes("job_seeker") && (
@@ -1883,12 +924,20 @@ const Header = () => {
                       Dashboard
                     </button>
                     {user?.roles?.includes("job_seeker") && (
-                      <button
-                        onClick={() => handleNavigation("/cv-management")}
-                        className="block w-full text-left px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                      >
-                        Quản lý CV
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleNavigation("/saved-jobs")}
+                          className="block w-full text-left px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          Việc làm đã lưu
+                        </button>
+                        <button
+                          onClick={() => handleNavigation("/cv-management")}
+                          className="block w-full text-left px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          Quản lý CV
+                        </button>
+                      </>
                     )}
                     {user?.roles?.includes("employer") && (
                       <button

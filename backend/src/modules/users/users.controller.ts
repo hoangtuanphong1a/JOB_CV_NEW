@@ -301,4 +301,29 @@ export class UsersController {
   async updateProfile(@Body() updateUserDto: UpdateUserDto, @Request() req) {
     return this.usersService.update(req.user.id, updateUserDto, req.user.id);
   }
+
+  @Post('profile/me/change-password')
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Change current user password' })
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({
+    status: 200,
+    description: 'Password changed successfully',
+  })
+  async changeCurrentUserPassword(
+    @Body() body: { currentPassword: string; newPassword: string },
+    @Request() req,
+  ) {
+    // First validate current password
+    const user = await this.usersService.findOne(req.user.id);
+    const isValidPassword = await user.validatePassword(body.currentPassword);
+    
+    if (!isValidPassword) {
+      throw new ForbiddenException('Current password is incorrect');
+    }
+
+    await this.usersService.updatePassword(req.user.id, body.newPassword);
+    return { message: 'Password changed successfully' };
+  }
 }
