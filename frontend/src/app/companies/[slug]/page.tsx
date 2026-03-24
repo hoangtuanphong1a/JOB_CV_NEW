@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, use } from "react";
 import { motion } from "framer-motion";
 import {
   MapPin,
@@ -24,87 +24,152 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-
-// Mock company data - in real app, this would come from API based on slug
-const companyData = {
-  id: "1",
-  slug: "techcorp-vietnam",
-  name: "TechCorp Vietnam",
-  logo: "https://images.unsplash.com/photo-1549924231-f129b911e442?w=150&h=150&fit=crop&crop=center",
-  coverImage: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&h=400&fit=crop",
-  industry: "Công nghệ thông tin",
-  size: "1000-5000 nhân viên",
-  founded: "2015",
-  location: "Quận 1, TP.HCM",
-  website: "https://techcorp.vn",
-  description: "TechCorp Vietnam là công ty công nghệ hàng đầu Việt Nam, chuyên cung cấp giải pháp phần mềm và dịch vụ số cho doanh nghiệp.",
-  about: `TechCorp Vietnam được thành lập từ năm 2015 với sứ mệnh mang công nghệ hiện đại đến với cộng đồng doanh nghiệp Việt Nam. Chúng tôi tự hào là đối tác tin cậy của hơn 1000 doanh nghiệp trên toàn quốc.
-
-Với đội ngũ hơn 500 kỹ sư và chuyên gia hàng đầu, chúng tôi cung cấp các giải pháp toàn diện về:
-- Phát triển ứng dụng di động và web
-- Tư vấn chuyển đổi số
-- Giải pháp đám mây và AI
-- Bảo mật thông tin doanh nghiệp
-
-TechCorp Vietnam luôn cam kết mang đến giá trị tối đa cho khách hàng và tạo môi trường làm việc tốt nhất cho nhân viên.`,
-  benefits: [
-    "Lương thưởng cạnh tranh",
-    "Bảo hiểm sức khỏe 100%",
-    "Đào tạo và phát triển nghề nghiệp",
-    "Môi trường làm việc năng động",
-    "Cơ hội thăng tiến nhanh",
-    "Chế độ nghỉ phép hấp dẫn"
-  ],
-  culture: [
-    "Đổi mới sáng tạo",
-    "Tôn trọng và hợp tác",
-    "Học hỏi liên tục",
-    "Định hướng khách hàng",
-    "Chất lượng vượt trội"
-  ],
-  jobs: [
-    {
-      id: "1",
-      title: "Frontend Developer",
-      type: "Toàn thời gian",
-      location: "TP.HCM",
-      salary: "15-25 triệu",
-      posted: "2 ngày trước"
-    },
-    {
-      id: "2",
-      title: "Backend Developer",
-      type: "Toàn thời gian",
-      location: "TP.HCM",
-      salary: "18-30 triệu",
-      posted: "1 tuần trước"
-    },
-    {
-      id: "3",
-      title: "DevOps Engineer",
-      type: "Toàn thời gian",
-      location: "Hà Nội",
-      salary: "20-35 triệu",
-      posted: "3 ngày trước"
-    }
-  ],
-  stats: {
-    employees: "1,247",
-    offices: "5",
-    years: "9",
-    rating: "4.8"
-  }
-};
+import { CompanyService, Company } from "@/services/companyService";
 
 interface CompanyDetailPageProps {
-  params: {
-    slug: string;
-  };
+  params: Promise<{
+    slug: string; // This is actually the company ID
+  }>;
 }
 
 export default function CompanyDetailPage({ params }: CompanyDetailPageProps) {
+  const resolvedParams = use(params);
   const [isSaved, setIsSaved] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [company, setCompany] = useState<Company | null>(null);
+  const [companyJobs, setCompanyJobs] = useState<Array<{
+    id: string;
+    title: string;
+    type?: string;
+    location?: string;
+    salary?: string;
+    createdAt: string;
+  }>>([]);
+  const [companyStats, setCompanyStats] = useState<{
+    totalJobs: number;
+    activeJobs: number;
+    totalApplications: number;
+    hiredCount: number;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchCompanyData();
+  }, [resolvedParams.slug]);
+
+  const fetchCompanyData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Fetch company details
+      const companyData = await CompanyService.getCompany(resolvedParams.slug);
+      setCompany(companyData);
+
+      // Fetch company jobs
+      try {
+        const jobsResponse = await CompanyService.getCompanyJobs(resolvedParams.slug, { limit: 10 });
+        setCompanyJobs(jobsResponse.data || []);
+      } catch (err) {
+        console.log('No jobs found or error fetching jobs');
+        setCompanyJobs([]);
+      }
+
+      // Fetch company stats
+      try {
+        const statsData = await CompanyService.getCompanyStats(resolvedParams.slug);
+        setCompanyStats(statsData);
+      } catch (err) {
+        console.log('No stats found or error fetching stats');
+        setCompanyStats({
+          totalJobs: 0,
+          activeJobs: 0,
+          totalApplications: 0,
+          hiredCount: 0
+        });
+      }
+    } catch (err: unknown) {
+      console.error('Error fetching company:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Không thể tải thông tin công ty';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#f26b38] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Đang tải thông tin công ty...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !company) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Không tìm thấy công ty</h2>
+          <p className="text-gray-600 mb-4">{error || 'Công ty không tồn tại hoặc đã bị xóa'}</p>
+          <Button onClick={() => window.history.back()}>
+            Quay lại
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const companyData = {
+    id: company.id,
+    name: company.name,
+    logo: company.logo || "https://images.unsplash.com/photo-1549924231-f129b911e442?w=150&h=150&fit=crop&crop=center",
+    coverImage: company.banner || "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&h=400&fit=crop",
+    industry: company.industry || "Chưa cập nhật",
+    size: company.size || "Chưa cập nhật",
+    founded: new Date(company.createdAt).getFullYear().toString(),
+    location: company.address && company.city ? `${company.address}, ${company.city}` : company.city || company.address || "Chưa cập nhật",
+    website: company.website || "#",
+    description: company.description || "Chưa có mô tả",
+    about: company.description || "Chưa có thông tin chi tiết về công ty.",
+    benefits: [
+      "Môi trường làm việc chuyên nghiệp",
+      "Cơ hội phát triển nghề nghiệp",
+      "Đãi ngộ hấp dẫn",
+      "Đội ngũ năng động"
+    ],
+    culture: [
+      "Đổi mới sáng tạo",
+      "Tôn trọng và hợp tác",
+      "Học hỏi liên tục",
+      "Định hướng khách hàng"
+    ],
+    jobs: companyJobs.map((job: {
+      id: string;
+      title: string;
+      type?: string;
+      location?: string;
+      salary?: string;
+      createdAt: string;
+    }) => ({
+      id: job.id,
+      title: job.title,
+      type: job.type || "Toàn thời gian",
+      location: job.location || company.city || "Chưa xác định",
+      salary: job.salary || "Thỏa thuận",
+      posted: new Date(job.createdAt).toLocaleDateString('vi-VN')
+    })),
+    stats: {
+      employees: companyStats?.totalJobs?.toString() || "0",
+      offices: "1",
+      years: (new Date().getFullYear() - new Date(company.createdAt).getFullYear()).toString(),
+      rating: "4.5"
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">

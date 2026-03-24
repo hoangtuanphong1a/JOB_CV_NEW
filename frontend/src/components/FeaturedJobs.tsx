@@ -94,15 +94,19 @@ export function FeaturedJobs() {
     router.push('/jobs');
   };
 
+  const formatSalary = (amount: number): string => {
+    return amount.toLocaleString('vi-VN');
+  };
+
   const getJobSalaryDisplay = (job: Job): string => {
     if (job.minSalary && job.maxSalary) {
-      return `${job.currency || 'VNĐ'} ${job.minSalary.toLocaleString()} - ${job.maxSalary.toLocaleString()}`;
+      return `${formatSalary(job.minSalary)} - ${formatSalary(job.maxSalary)} ${job.currency || 'VNĐ'}`;
     }
     if (job.minSalary) {
-      return `Từ ${job.currency || 'VNĐ'} ${job.minSalary.toLocaleString()}`;
+      return `Từ ${formatSalary(job.minSalary)} ${job.currency || 'VNĐ'}`;
     }
     if (job.maxSalary) {
-      return `Đến ${job.currency || 'VNĐ'} ${job.maxSalary.toLocaleString()}`;
+      return `Đến ${formatSalary(job.maxSalary)} ${job.currency || 'VNĐ'}`;
     }
     return 'Thương lượng';
   };

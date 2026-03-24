@@ -1,4 +1,4 @@
-"use client";
+"kuse client";
 
 import React from "react";
 import { motion } from "framer-motion";
@@ -14,10 +14,12 @@ export function Hero() {
   const router = useRouter();
 
   const handleFindJob = () => {
+    console.log('Navigating to jobs page...');
     router.push('/jobs');
   };
 
   const handleCreateCV = () => {
+    console.log('Navigating to CV builder...');
     router.push('/cv-builder');
   };
 
@@ -68,20 +70,23 @@ export function Hero() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="flex flex-col sm:flex-row gap-4"
             >
-              <Button
+              <button
                 onClick={handleFindJob}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer flex items-center justify-center z-10 relative"
+                type="button"
+                style={{ pointerEvents: 'auto' }}
               >
                 Tìm việc ngay
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button
+              </button>
+              <button
                 onClick={handleCreateCV}
-                variant="outline"
-                className="border-2 border-gray-300 hover:border-orange-500 hover:text-orange-500 px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300"
+                className="border-2 border-gray-300 hover:border-orange-500 hover:text-orange-500 px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300 bg-white cursor-pointer z-10 relative"
+                type="button"
+                style={{ pointerEvents: 'auto' }}
               >
                 Tạo CV miễn phí
-              </Button>
+              </button>
             </motion.div>
 
             {/* Stats */}

@@ -141,11 +141,15 @@ export default function AdminJobsPage() {
   };
 
   const formatSalary = (salary?: { min: number; max: number; currency: string }) => {
-    if (!salary) return 'Thỏa thuận';
+    const formatAmount = (amount: number): string => {
+      return amount.toLocaleString('vi-VN');
+    };
+
+    if (!salary) return 'Thương lượng';
     if (salary.min && salary.max) {
-      return `${salary.min.toLocaleString()} - ${salary.max.toLocaleString()} ${salary.currency}`;
+      return `${formatAmount(salary.min)} - ${formatAmount(salary.max)} ${salary.currency}`;
     }
-    return `${salary.min?.toLocaleString() || salary.max?.toLocaleString()} ${salary.currency}`;
+    return `${formatAmount(salary.min || salary.max || 0)} ${salary.currency}`;
   };
 
   if (isLoading) {

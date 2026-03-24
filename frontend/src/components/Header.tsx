@@ -138,7 +138,7 @@ const Header = () => {
       ],
     },
     {
-      name: "Công cụ CV",
+      name: "Tạo CV",
       href: "/cv-builder",
       current: pathname === "/cv-builder",
       hasDropdown: false,

@@ -9,111 +9,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
+import { api } from '@/services/api';
 
-// Sample jobs data for filtering
-const sampleJobs = [
-  {
-    id: 1,
-    title: "Senior Frontend Developer",
-    company: "Tech Solutions Vietnam",
-    location: "Hà Nội",
-    salary: "25-35 triệu",
-    type: "Full-time",
-    level: "Senior",
-    tags: ["ReactJS", "TypeScript", "TailwindCSS"],
-    posted: "2 giờ trước",
-    description: "Chúng tôi đang tìm kiếm một Senior Frontend Developer có kinh nghiệm với ReactJS và TypeScript để tham gia vào dự án thương mại điện tử lớn.",
-  },
-  {
-    id: 2,
-    title: "UI/UX Designer",
-    company: "Creative Studio",
-    location: "Hồ Chí Minh",
-    salary: "15-25 triệu",
-    type: "Full-time",
-    level: "Middle",
-    tags: ["Figma", "Adobe XD", "Sketch"],
-    posted: "5 giờ trước",
-    description: "Vị trí UI/UX Designer với 2+ năm kinh nghiệm, thành thạo các công cụ thiết kế hiện đại.",
-  },
-  {
-    id: 3,
-    title: "Backend Developer",
-    company: "FinTech Innovations",
-    location: "Đà Nẵng",
-    salary: "20-30 triệu",
-    type: "Full-time",
-    level: "Middle",
-    tags: ["NodeJS", "MongoDB", "AWS"],
-    posted: "1 ngày trước",
-    description: "Backend Developer có kinh nghiệm với NodeJS, MongoDB và AWS Cloud Services.",
-  },
-  {
-    id: 4,
-    title: "Product Manager",
-    company: "E-commerce Giant",
-    location: "Hà Nội",
-    salary: "30-45 triệu",
-    type: "Full-time",
-    level: "Senior",
-    tags: ["Agile", "Scrum", "Product Strategy"],
-    posted: "1 ngày trước",
-    description: "Product Manager với kinh nghiệm quản lý sản phẩm trong lĩnh vực thương mại điện tử.",
-  },
-  {
-    id: 5,
-    title: "Marketing Executive",
-    company: "Digital Agency Pro",
-    location: "Hồ Chí Minh",
-    salary: "12-18 triệu",
-    type: "Full-time",
-    level: "Junior",
-    tags: ["SEO", "Social Media", "Content"],
-    posted: "2 ngày trước",
-    description: "Marketing Executive với kỹ năng SEO, Social Media và Content Marketing.",
-  },
-  {
-    id: 6,
-    title: "Data Analyst",
-    company: "Analytics Corp",
-    location: "Remote",
-    salary: "18-28 triệu",
-    type: "Remote",
-    level: "Middle",
-    tags: ["Python", "SQL", "Tableau"],
-    posted: "3 ngày trước",
-    description: "Data Analyst với kỹ năng Python, SQL và các công cụ visualization.",
-  },
-  {
-    id: 7,
-    title: "DevOps Engineer",
-    company: "Cloud Systems",
-    location: "Hà Nội",
-    salary: "28-40 triệu",
-    type: "Full-time",
-    level: "Senior",
-    tags: ["Docker", "Kubernetes", "AWS"],
-    posted: "4 giờ trước",
-    description: "DevOps Engineer có kinh nghiệm với containerization và cloud platforms.",
-  },
-  {
-    id: 8,
-    title: "Mobile App Developer",
-    company: "Mobile Solutions",
-    location: "Hồ Chí Minh",
-    salary: "22-35 triệu",
-    type: "Full-time",
-    level: "Middle",
-    tags: ["React Native", "Flutter", "iOS"],
-    posted: "6 giờ trước",
-    description: "Mobile App Developer với kinh nghiệm React Native và Flutter.",
-  },
-];
+interface Job {
+  id: string;
+  title: string;
+  company?: {
+    name: string;
+  };
+  city?: string;
+  minSalary?: number;
+  maxSalary?: number;
+  jobType?: string;
+  experienceLevel?: string;
+  skills?: Array<{ name: string }>;
+  createdAt: string;
+  description?: string;
+}
 
 export function SearchBar() {
   const router = useRouter();
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const popularKeywords = ['ReactJS', 'NodeJS', 'Marketing', 'Designer', 'Sales'];
   const locations = [
@@ -132,21 +51,43 @@ export function SearchBar() {
     'Tuyên Quang', 'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái'
   ].sort();
 
+  // Fetch jobs from API
+  useEffect(() => {
+    const fetchJobs = async () => {
+      setIsLoading(true);
+      try {
+        const response = await api.get('/jobs', {
+          params: {
+            limit: 20,
+            status: 'published'
+          }
+        });
+        setJobs(response.data.data || []);
+      } catch (error) {
+        console.error('Error fetching jobs:', error);
+        setJobs([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
   // Filter jobs based on search criteria
   const filteredJobs = React.useMemo(() => {
-    let filtered = sampleJobs;
+    let filtered = jobs;
 
     if (searchKeyword.trim()) {
       const keyword = searchKeyword.toLowerCase().trim();
       filtered = filtered.filter(job => {
-        // Search in title, company, description, tags, level, type
         const searchableText = [
           job.title,
-          job.company,
-          job.description,
-          job.level,
-          job.type,
-          ...job.tags
+          job.company?.name || '',
+          job.description || '',
+          job.experienceLevel || '',
+          job.jobType || '',
+          ...(job.skills?.map(s => s.name) || [])
         ].join(' ').toLowerCase();
 
         return searchableText.includes(keyword);
@@ -154,11 +95,11 @@ export function SearchBar() {
     }
 
     if (selectedLocation) {
-      filtered = filtered.filter(job => job.location === selectedLocation);
+      filtered = filtered.filter(job => job.city === selectedLocation);
     }
 
     return filtered;
-  }, [searchKeyword, selectedLocation]);
+  }, [jobs, searchKeyword, selectedLocation]);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -174,11 +115,53 @@ export function SearchBar() {
   };
 
   const handleKeywordClick = (keyword: string) => {
+    // Transfer keyword to search input
     setSearchKeyword(keyword);
+    // Focus on search input
+    const searchInput = document.querySelector('input[placeholder="Tên công việc, kỹ năng..."]') as HTMLInputElement;
+    if (searchInput) {
+      searchInput.focus();
+    }
   };
 
-  const handleJobClick = (jobId: number) => {
-    router.push(`/jobs/jobdetail?id=${jobId}`);
+  const handleJobClick = (jobId: string) => {
+    router.push(`/jobs/${jobId}`);
+  };
+
+  const handleApply = async (e: React.MouseEvent, jobId: string) => {
+    e.stopPropagation();
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      router.push('/auth/login');
+      return;
+    }
+    router.push(`/jobs/${jobId}/apply`);
+  };
+
+  const formatSalary = (min?: number, max?: number) => {
+    if (!min && !max) return 'Thương lượng';
+    const formatAmount = (amount: number) => {
+      return (amount / 1000000).toFixed(0) + ' triệu';
+    };
+    if (min && max) {
+      return `${formatAmount(min)} - ${formatAmount(max)}`;
+    }
+    if (min) return `Từ ${formatAmount(min)}`;
+    if (max) return `Đến ${formatAmount(max)}`;
+    return 'Thương lượng';
+  };
+
+  const getTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Vừa đăng';
+    if (diffInHours < 24) return `${diffInHours} giờ trước`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 30) return `${diffInDays} ngày trước`;
+    const diffInMonths = Math.floor(diffInDays / 30);
+    return `${diffInMonths} tháng trước`;
   };
 
   return (
@@ -228,18 +211,17 @@ export function SearchBar() {
         <div className="flex flex-wrap items-center justify-center gap-3">
           <span className="text-gray-600 text-sm font-medium">Từ khóa hot:</span>
           {popularKeywords.map((keyword, index) => (
-            <motion.button
+            <button
               key={keyword}
               onClick={() => handleKeywordClick(keyword)}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-orange-50 hover:bg-orange-100 text-orange-600 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer"
+              className="bg-orange-50 hover:bg-orange-100 text-orange-600 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg hover:-translate-y-1 hover:scale-105"
+              style={{ 
+                pointerEvents: 'auto',
+                animationDelay: `${index * 0.1}s`
+              }}
             >
               {keyword}
-            </motion.button>
+            </button>
           ))}
         </div>
       </motion.div>
@@ -313,12 +295,12 @@ export function SearchBar() {
                             <h4 className="text-lg font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-1">
                               {job.title}
                             </h4>
-                            <p className="text-sm text-gray-600">{job.company}</p>
+                            <p className="text-sm text-gray-600">{job.company?.name || 'Công ty'}</p>
                           </div>
                           <div className="text-right">
                             <div className="flex items-center gap-1 text-sm text-gray-500 mb-1">
                               <Clock className="h-4 w-4" />
-                              <span>{job.posted}</span>
+                              <span>{getTimeAgo(job.createdAt)}</span>
                             </div>
                           </div>
                         </div>
@@ -326,37 +308,41 @@ export function SearchBar() {
                         <div className="flex items-center gap-4 mb-3 text-sm text-gray-600">
                           <div className="flex items-center gap-1">
                             <MapPin className="h-4 w-4" />
-                            <span>{job.location}</span>
+                            <span>{job.city || 'Không xác định'}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <DollarSign className="h-4 w-4" />
-                            <span>{job.salary}</span>
+                            <span>{formatSalary(job.minSalary, job.maxSalary)}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Briefcase className="h-4 w-4" />
-                            <span>{job.type}</span>
+                            <span>{job.jobType || 'Toàn thời gian'}</span>
                           </div>
                         </div>
 
                         <p className="text-sm text-gray-700 mb-3 line-clamp-2">
-                          {job.description}
+                          {job.description || 'Chưa có mô tả'}
                         </p>
 
                         <div className="flex items-center justify-between">
                           <div className="flex flex-wrap gap-2">
-                            {job.tags.slice(0, 3).map((tag) => (
-                              <Badge key={tag} variant="secondary" className="text-xs">
-                                {tag}
+                            {job.skills?.slice(0, 3).map((skill, idx) => (
+                              <Badge key={idx} variant="secondary" className="text-xs">
+                                {skill.name}
                               </Badge>
                             ))}
                           </div>
 
-                          <Button
-                            size="sm"
-                            className="bg-orange-500 hover:bg-orange-600 text-white"
+                          <button
+                            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer z-10 relative"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApply(e, job.id);
+                            }}
+                            style={{ pointerEvents: 'auto' }}
                           >
                             Ứng tuyển ngay
-                          </Button>
+                          </button>
                         </div>
                       </div>
                     </div>

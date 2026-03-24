@@ -171,8 +171,12 @@ export default function CandidateApplicationsPage() {
   ];
 
   const formatSalary = (job: Application['job']) => {
+    const formatSalary = (amount: number): string => {
+      return amount.toLocaleString('vi-VN');
+    };
+
     if (job.salaryMin && job.salaryMax) {
-      return `${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()} ${job.currency || 'VNĐ'}`;
+      return `${formatSalary(job.salaryMin)} - ${formatSalary(job.salaryMax)} ${job.currency || 'VNĐ'}`;
     }
     return 'Thương lượng';
   };

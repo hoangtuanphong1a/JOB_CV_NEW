@@ -23,6 +23,7 @@ import Link from "next/link";
 import { JobsHero } from "@/components/JobsHero";
 import { api } from "@/services/api";
 import toast from "react-hot-toast";
+import { motion } from "framer-motion";
 
 interface Job {
   id: string;
@@ -80,6 +81,7 @@ export default function JobsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
+  const [newJobNotification, setNewJobNotification] = useState<string | null>(null);
   const jobsPerPage = 6;
 
   // Fetch jobs on component mount and whenever the component is remounted
@@ -177,12 +179,41 @@ export default function JobsPage() {
       if (!document.hidden) {
         // Only refresh if tab is active
         console.log("Periodic refresh: checking for new jobs...");
-        fetchJobs();
+        checkForNewJobs();
       }
     }, 30000); // 30 seconds
 
     return () => clearInterval(interval);
   }, []);
+
+  // Real-time check for new jobs
+  const checkForNewJobs = async () => {
+    try {
+      const previousJobCount = jobs.length;
+      const response = await api.get("/jobs");
+      const data = response.data;
+      const newJobs = data.data || [];
+      
+      // Check if there are new jobs
+      if (newJobs.length > previousJobCount && previousJobCount > 0) {
+        const newJobTitles = newJobs
+          .slice(0, newJobs.length - previousJobCount)
+          .map((job: Job) => job.title)
+          .join(", ");
+        
+        setNewJobNotification(`Có ${newJobs.length - previousJobCount} việc làm mới: ${newJobTitles}`);
+        
+        // Auto-hide notification after 5 seconds
+        setTimeout(() => {
+          setNewJobNotification(null);
+        }, 5000);
+      }
+      
+      setJobs(newJobs);
+    } catch (error) {
+      console.error("Error checking for new jobs:", error);
+    }
+  };
 
   const fetchJobs = async () => {
     try {
@@ -226,10 +257,10 @@ export default function JobsPage() {
       console.error("❌ Full error object:", error);
 
       // Try to get more details from axios error
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((error as any)?.response) {
-        console.error("❌ Response status:", (error as any).response.status);
-        console.error("❌ Response data:", (error as any).response.data);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { status?: number; data?: unknown } };
+        console.error("❌ Response status:", axiosError.response?.status);
+        console.error("❌ Response data:", axiosError.response?.data);
       }
 
       setJobs([]);
@@ -240,18 +271,24 @@ export default function JobsPage() {
   };
 
   // Helper functions
+  const formatSalary = (amount: number): string => {
+    // Remove decimal places if present and format with dots as thousand separators
+    const cleanAmount = Math.floor(amount);
+    return cleanAmount.toLocaleString('vi-VN');
+  };
+
   const getJobSalaryDisplay = (job: Job): string => {
     if (job.salaryType === "negotiable") {
       return "Thương lượng";
     }
     if (job.minSalary && job.maxSalary) {
-      return `${job.currency || "VNĐ"} ${job.minSalary.toLocaleString()} - ${job.maxSalary.toLocaleString()}`;
+      return `${formatSalary(job.minSalary)} - ${formatSalary(job.maxSalary)} ${job.currency || "VNĐ"}`;
     }
     if (job.minSalary) {
-      return `Từ ${job.currency || "VNĐ"} ${job.minSalary.toLocaleString()}`;
+      return `Từ ${formatSalary(job.minSalary)} ${job.currency || "VNĐ"}`;
     }
     if (job.maxSalary) {
-      return `Đến ${job.currency || "VNĐ"} ${job.maxSalary.toLocaleString()}`;
+      return `Đến ${formatSalary(job.maxSalary)} ${job.currency || "VNĐ"}`;
     }
     return "Không công bố";
   };
@@ -312,16 +349,19 @@ export default function JobsPage() {
         if (!locationString.includes(locationLower)) return false;
       }
 
-      // Salary filter (convert to millions for comparison)
-      let jobMinSalary = 0;
-      let jobMaxSalary = 0;
-      if (job.minSalary) jobMinSalary = job.minSalary / 1000000; // Convert to millions
-      if (job.maxSalary) jobMaxSalary = job.maxSalary / 1000000;
-      else if (job.minSalary) jobMaxSalary = job.minSalary / 1000000;
+      // Salary filter (only apply if salary range is not default)
+      const isDefaultSalaryRange = salaryRange[0] === 10 && salaryRange[1] === 50;
+      if (!isDefaultSalaryRange) {
+        let jobMinSalary = 0;
+        let jobMaxSalary = 0;
+        if (job.minSalary) jobMinSalary = job.minSalary / 1000000; // Convert to millions
+        if (job.maxSalary) jobMaxSalary = job.maxSalary / 1000000;
+        else if (job.minSalary) jobMaxSalary = job.minSalary / 1000000;
 
-      const salaryInRange =
-        jobMaxSalary >= salaryRange[0] && jobMinSalary <= salaryRange[1];
-      if (!salaryInRange) return false;
+        const salaryInRange =
+          jobMaxSalary >= salaryRange[0] && jobMinSalary <= salaryRange[1];
+        if (!salaryInRange) return false;
+      }
 
       // Job type filter
       const jobTypeMatch =
@@ -580,37 +620,6 @@ export default function JobsPage() {
                     </div>
                   </div>
 
-                  {/* Salary Range */}
-                  <div className="mb-6">
-                    <h3 className="text-sm text-gray-600 mb-3">
-                      Mức lương (VNĐ)
-                    </h3>
-                    <div className="px-2">
-                      <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-4">
-                        <Slider
-                          value={salaryRange}
-                          onValueChange={setSalaryRange}
-                          min={0}
-                          max={10}
-                          step={0.5}
-                          className="mb-4"
-                        />
-                        <div className="flex items-center justify-between">
-                          <div className="bg-white rounded-lg px-3 py-2 shadow-sm border">
-                            <span className="text-sm font-semibold text-[#f26b38]">
-                              {salaryRange[0] === 0 ? '0 VNĐ' : `${salaryRange[0]} triệu`}
-                            </span>
-                          </div>
-                          <div className="text-gray-400 text-sm">đến</div>
-                          <div className="bg-white rounded-lg px-3 py-2 shadow-sm border">
-                            <span className="text-sm font-semibold text-[#f26b38]">
-                              {salaryRange[1] === 10 ? '10 triệu VNĐ' : `${salaryRange[1]} triệu`}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
 
                   {/* Skills - Note: Skills filter will be implemented when skills data is available */}
                   <div>
@@ -673,15 +682,36 @@ export default function JobsPage() {
                   </div>
                 </div>
 
-                {/* Loading State */}
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-[#f26b38]" />
-                    <span className="ml-2 text-gray-600">
-                      Đang tải danh sách việc làm...
-                    </span>
-                  </div>
-                ) : (
+        {/* Real-time Notification */}
+        {newJobNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-green-700 font-medium">{newJobNotification}</span>
+            </div>
+            <button
+              onClick={() => setNewJobNotification(null)}
+              className="text-green-500 hover:text-green-700"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-[#f26b38]" />
+            <span className="ml-2 text-gray-600">
+              Đang tải danh sách việc làm...
+            </span>
+          </div>
+        ) : (
                   <>
                     {/* Job Cards */}
                     <div className="space-y-4">

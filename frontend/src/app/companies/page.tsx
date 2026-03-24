@@ -177,6 +177,13 @@ export default function CompaniesPage() {
                 key={company.id}
                 className="group relative bg-white rounded-xl p-6 border border-gray-200 hover:border-[#f26b38] hover:shadow-xl transition-all duration-300"
               >
+                {/* Jobs Badge - Top Right Corner */}
+                <div className="absolute top-4 right-4 z-10">
+                  <Badge variant="secondary" className="bg-[#f26b38] text-white hover:bg-[#e05a27]">
+                    {company.jobsCount} việc làm
+                  </Badge>
+                </div>
+
                 {/* Company Logo */}
                 <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#f26b38] to-[#e05a27] flex items-center justify-center mb-4">
                   {company.logo ? (
@@ -187,25 +194,27 @@ export default function CompaniesPage() {
                 </div>
 
                 {/* Company Info */}
-                <div className="space-y-3 mb-4">
+                <div className="mb-4">
                   <Link href={`/companies/${company.id}`}>
                     <h3 className="text-xl font-semibold group-hover:text-[#f26b38] transition-colors cursor-pointer">
                       {company.name}
                     </h3>
                   </Link>
-                  <p className="text-sm text-gray-600">{company.industry}</p>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <MapPin className="h-4 w-4" />
-                    <span>{company.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Users className="h-4 w-4" />
-                    <span>{company.size} nhân viên</span>
-                  </div>
+                  <p className="text-sm text-gray-600 mt-1">{company.industry}</p>
                 </div>
 
-                {/* Rating and Jobs */}
+                {/* Details Row */}
                 <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <MapPin className="h-4 w-4" />
+                      <span>{company.location}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <Users className="h-4 w-4" />
+                      <span>{company.size} nhân viên</span>
+                    </div>
+                  </div>
                   <div className="flex items-center gap-1">
                     <div className="flex">
                       {[1, 2, 3, 4, 5].map((star) => (
@@ -219,9 +228,6 @@ export default function CompaniesPage() {
                     </div>
                     <span className="text-sm text-gray-600 ml-1">{company.rating}</span>
                   </div>
-                  <Badge variant="secondary">
-                    {company.jobsCount} việc làm
-                  </Badge>
                 </div>
 
                 {/* Actions */}

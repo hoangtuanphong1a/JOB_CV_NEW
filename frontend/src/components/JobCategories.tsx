@@ -55,8 +55,20 @@ export function JobCategories() {
       setIsLoading(true);
       const response = await jobService.getJobCategories();
 
+      // If API returns data, use it; otherwise use fallback
+      const categoriesData = response && response.length > 0 ? response : [
+        { id: '1', name: 'Công nghệ thông tin', description: 'IT and software development' },
+        { id: '2', name: 'Marketing', description: 'Marketing and advertising' },
+        { id: '3', name: 'Thiết kế', description: 'Design and creative' },
+        { id: '4', name: 'Kinh doanh', description: 'Sales and business' },
+        { id: '5', name: 'Tài chính', description: 'Finance and accounting' },
+        { id: '6', name: 'Nhân sự', description: 'Human resources' },
+        { id: '7', name: 'Kỹ thuật', description: 'Engineering' },
+        { id: '8', name: 'Y tế', description: 'Healthcare' },
+      ];
+
       // Add icons, colors, and mock job counts
-      const categoriesWithUI = response.map((category, index) => {
+      const categoriesWithUI = categoriesData.map((category, index) => {
         // Find matching icon based on category name
         const iconKey = Object.keys(iconMap).find(key =>
           category.name.toLowerCase().includes(key.toLowerCase())
@@ -73,7 +85,30 @@ export function JobCategories() {
       setCategories(categoriesWithUI);
     } catch (error) {
       console.error('Error fetching job categories:', error);
-      setCategories([]);
+      // Use fallback data on error
+      const fallbackCategories = [
+        { id: '1', name: 'Công nghệ thông tin', description: 'IT and software development' },
+        { id: '2', name: 'Marketing', description: 'Marketing and advertising' },
+        { id: '3', name: 'Thiết kế', description: 'Design and creative' },
+        { id: '4', name: 'Kinh doanh', description: 'Sales and business' },
+        { id: '5', name: 'Tài chính', description: 'Finance and accounting' },
+        { id: '6', name: 'Nhân sự', description: 'Human resources' },
+        { id: '7', name: 'Kỹ thuật', description: 'Engineering' },
+        { id: '8', name: 'Y tế', description: 'Healthcare' },
+      ].map((category, index) => {
+        const iconKey = Object.keys(iconMap).find(key =>
+          category.name.toLowerCase().includes(key.toLowerCase())
+        ) || Object.keys(iconMap)[index % Object.keys(iconMap).length];
+
+        return {
+          ...category,
+          jobCount: Math.floor(Math.random() * 2000) + 500,
+          icon: iconMap[iconKey as keyof typeof iconMap],
+          color: colorMap[index % colorMap.length],
+        };
+      });
+
+      setCategories(fallbackCategories);
     } finally {
       setIsLoading(false);
     }

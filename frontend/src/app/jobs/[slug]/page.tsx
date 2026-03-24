@@ -24,6 +24,7 @@ import {
   User,
   Mail,
   Phone,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -138,17 +139,19 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
     }
   };
 
+  const formatSalary = (amount: number): string => {
+    return amount.toLocaleString('vi-VN');
+  };
+
   const getJobSalaryDisplay = (job: Job): string => {
     if (job.minSalary && job.maxSalary) {
-      return `${
-        job.currency || "VNĐ"
-      } ${job.minSalary.toLocaleString()} - ${job.maxSalary.toLocaleString()}`;
+      return `${formatSalary(job.minSalary)} - ${formatSalary(job.maxSalary)} ${job.currency || "VNĐ"}`;
     }
     if (job.minSalary) {
-      return `Từ ${job.currency || "VNĐ"} ${job.minSalary.toLocaleString()}`;
+      return `Từ ${formatSalary(job.minSalary)} ${job.currency || "VNĐ"}`;
     }
     if (job.maxSalary) {
-      return `Đến ${job.currency || "VNĐ"} ${job.maxSalary.toLocaleString()}`;
+      return `Đến ${formatSalary(job.maxSalary)} ${job.currency || "VNĐ"}`;
     }
     return "Thương lượng";
   };
@@ -233,46 +236,66 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
               <span className="text-gray-900 font-medium">{job.title}</span>
             </div>
 
-            {/* Job Title & Company */}
+            {/* Job Header - Simplified */}
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
               <div className="flex-1">
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-100 to-red-100 border flex items-center justify-center">
-                    <Building2 className="h-6 w-6 text-gray-600" />
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-100 to-red-100 border-2 border-white shadow-lg flex items-center justify-center">
+                    <Building2 className="h-7 w-7 text-[#f26b38]" />
                   </div>
-                  <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
+                  <div className="flex-1">
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
                       {job.title}
                     </h1>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg text-gray-700">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg font-medium text-[#f26b38]">
                         {job.company?.name}
                       </span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-4 text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        <span>{getJobLocation(job)}</span>
+                    
+                    {/* Key Info - 3 columns */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <MapPin className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500">Địa điểm</div>
+                          <div className="text-sm font-medium text-gray-900">{getJobLocation(job)}</div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{getJobTypeDisplay(job.jobType)}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500">Mức lương</div>
+                          <div className="text-sm font-semibold text-green-600">{getJobSalaryDisplay(job)}</div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="h-4 w-4" />
-                        <span className="font-semibold text-green-600">
-                          {getJobSalaryDisplay(job)}
-                        </span>
-oa                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                          <Briefcase className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500">Loại hình</div>
+                          <div className="text-sm font-medium text-gray-900">{getJobTypeDisplay(job.jobType)}</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Tags & Badges */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge variant="secondary">{job.experienceLevel}</Badge>
+                {/* Tags & Badges - Compact */}
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200">
+                    {job.experienceLevel}
+                  </Badge>
                   {job.remoteWork && (
-                    <Badge variant="outline">Làm việc từ xa</Badge>
+                    <Badge variant="outline" className="border-green-300 text-green-700 bg-green-50">
+                      <Globe className="h-3 w-3 mr-1" />
+                      Remote
+                    </Badge>
                   )}
                   {job.urgent && (
                     <Badge variant="destructive" className="bg-red-500">
@@ -280,50 +303,40 @@ oa                      </div>
                       Tuyển gấp
                     </Badge>
                   )}
-                </div>
-
-                {/* Meta Info */}
-                <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600">
-                  <span>Đăng {getTimeAgo(job.createdAt)}</span>
-                  <span>{job.applicationCount} ứng viên đã ứng tuyển</span>
+                  <div className="flex items-center gap-4 text-sm text-gray-500 ml-auto">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      <span>{getTimeAgo(job.createdAt)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Users className="h-4 w-4" />
+                      <span>{job.applicationCount} ứng tuyển</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
+              {/* Action Buttons - Clean */}
+              <div className="flex flex-col gap-3 min-w-[200px]">
                 <Button
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  onClick={handleSaveJob}
+                  className="w-full bg-[#f26b38] hover:bg-[#e05a27] text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                  onClick={() => setShowApplicationForm(true)}
                 >
-                  <Bookmark
-                    className={`h-4 w-4 ${
-                      isSaved ? "fill-blue-500 text-blue-500" : ""
-                    }`}
-                  />
-                  {isSaved ? "Đã lưu" : "Lưu việc làm"}
+                  <Send className="h-4 w-4 mr-2" />
+                  Ứng tuyển ngay
                 </Button>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Share2 className="h-4 w-4" />
-                  Chia sẻ
-                </Button>
-                {!isApplied ? (
+                <div className="flex gap-2">
                   <Button
-                    className="flex items-center gap-2 bg-[#f26b38] hover:bg-[#e05a27]"
-                    onClick={() => setShowApplicationForm(true)}
+                    variant="outline"
+                    className="flex-1 border-gray-300 hover:bg-gray-50"
+                    onClick={handleSaveJob}
                   >
-                    <Send className="h-4 w-4" />
-                    Ứng tuyển ngay
+                    <Bookmark className={`h-4 w-4 ${isSaved ? "fill-blue-500 text-blue-500" : ""}`} />
                   </Button>
-                ) : (
-                  <Button
-                    disabled
-                    className="flex items-center gap-2 bg-green-500"
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                    Đã ứng tuyển
+                  <Button variant="outline" className="flex-1 border-gray-300 hover:bg-gray-50">
+                    <Share2 className="h-4 w-4" />
                   </Button>
-                )}
+                </div>
               </div>
             </div>
           </motion.div>
@@ -616,35 +629,30 @@ oa                      </div>
                 </div>
               </motion.div>
 
-              {/* Job Summary Card */}
+              {/* Job Summary Card - Compact */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-6 mb-8 border border-orange-100"
+                className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200"
               >
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-100 to-red-100 border flex items-center justify-center flex-shrink-0">
-                    <Briefcase className="h-6 w-6 text-gray-600" />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-100 to-red-100 border flex items-center justify-center flex-shrink-0">
+                    <Briefcase className="h-5 w-5 text-[#f26b38]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 mb-1 truncate">
+                    <h4 className="font-semibold text-gray-900 text-sm truncate mb-1">
                       {job.title}
                     </h4>
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-2">
-                      <div className="flex items-center gap-1">
-                        <Building2 className="h-4 w-4" />
-                        <span>{job.company?.name}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        <span>{getJobLocation(job)}</span>
-                      </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                      <span className="font-medium">{job.company?.name}</span>
+                      <span>•</span>
+                      <span>{getJobLocation(job)}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-semibold text-green-600">
-                        {getJobSalaryDisplay(job)}
-                      </span>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="text-sm font-semibold text-green-600">
+                      {getJobSalaryDisplay(job)}
                     </div>
                   </div>
                 </div>
