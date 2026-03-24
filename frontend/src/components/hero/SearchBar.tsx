@@ -198,13 +198,14 @@ export function SearchBar() {
               </SelectContent>
             </Select>
           </div>
-          <Button
+          <button
             onClick={handleSearch}
-            className="bg-orange-500 hover:bg-orange-600 text-white h-14 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+            className="bg-orange-500 hover:bg-orange-600 text-white h-14 px-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer flex items-center justify-center"
+            style={{ pointerEvents: 'auto' }}
           >
             <Search className="h-5 w-5 mr-2" />
             Tìm việc làm
-          </Button>
+          </button>
         </div>
 
         {/* Popular Keywords */}
