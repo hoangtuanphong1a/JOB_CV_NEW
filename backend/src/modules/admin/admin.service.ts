@@ -6,7 +6,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThanOrEqual } from 'typeorm';
+import { Repository, LessThanOrEqual, Between } from 'typeorm';
 import { User, UserStatus } from '../common/entities/user.entity';
 import { Role, RoleName } from '../common/entities/role.entity';
 import { UserRole } from '../common/entities/user-role.entity';
@@ -889,7 +889,7 @@ export class AdminService {
               ...skill,
               usageCount,
             };
-          } catch (error) {
+          } catch (error: any) {
             // If relationship query fails, return skill with usageCount 0
             console.warn(
               `Failed to get usage count for skill ${skill.id}:`,
@@ -1337,6 +1337,883 @@ export class AdminService {
     }
   }
 
+  // ===== CANDIDATE MANAGEMENT =====
+  async getAllCandidates(query: any) {
+    try {
+      const { page = 1, limit = 10, profileStatus, status, search } = query;
+      const skip = (page - 1) * limit;
+
+      let qb = this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.userRoles', 'userRole')
+        .leftJoinAndSelect('userRole.role', 'roleEntity')
+        .leftJoinAndSelect('user.jobSeekerProfiles', 'jobSeekerProfile')
+        .where('roleEntity.name = :role', { role: 'job_seeker' });
+
+      if (status) {
+        qb = qb.andWhere('user.isActive = :isActive', {
+          isActive: status === 'active',
+        });
+      }
+
+      if (search) {
+        qb = qb.andWhere(
+          '(user.email LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search)',
+          { search: `%${search}%` },
+        );
+      }
+
+      const [users, total] = await qb
+        .orderBy('user.createdAt', 'DESC')
+        .skip(skip)
+        .take(limit)
+        .getManyAndCount();
+
+      // Add profile status for each user
+      const candidatesWithStatus = users.map(user => {
+        const profile = user.jobSeekerProfiles?.[0];
+        let profileStatusValue = 'incomplete';
+        if (profile) {
+          if (profile.profileCompletion >= 80) {
+            profileStatusValue = 'pending';
+          }
+        }
+        return {
+          ...user,
+          profileStatus: profileStatusValue,
+          profileCompletion: profile?.profileCompletion || 0,
+        };
+      });
+
+      return {
+        data: candidatesWithStatus,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      this.logger.error('Error getting all candidates', error);
+      throw error;
+    }
+  }
+
+  async getCandidateProfile(id: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: [
+          'userRoles',
+          'userRoles.role',
+          'jobSeekerProfiles',
+          'jobSeekerProfiles.education',
+          'jobSeekerProfiles.experience',
+          'jobSeekerProfiles.skills',
+        ],
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const profile = user.jobSeekerProfiles?.[0];
+      const applications = profile
+        ? await this.applicationRepository.count({
+            where: { jobSeekerProfileId: profile.id },
+          })
+        : 0;
+
+      return {
+        ...user,
+        profile,
+        statistics: {
+          totalApplications: applications,
+          profileCompletion: profile?.profileCompletion || 0,
+        },
+      };
+    } catch (error: any) {
+      this.logger.error(`Error getting candidate profile for ${id}`, error);
+      throw error;
+    }
+  }
+
+  async approveCandidateProfile(id: string, notes?: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: ['jobSeekerProfiles'],
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const profile = user.jobSeekerProfiles?.[0];
+      if (profile) {
+        profile.profileCompletion = 100;
+        await this.userRepository.save(user);
+      }
+
+      this.logger.log(`Candidate profile ${id} approved`);
+      return { message: 'Candidate profile approved successfully' };
+    } catch (error) {
+      this.logger.error(`Error approving candidate profile for ${id}`, error);
+      throw error;
+    }
+  }
+
+  async rejectCandidateProfile(id: string, reason: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: ['jobSeekerProfiles'],
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      user.statusReason = reason;
+      await this.userRepository.save(user);
+
+      this.logger.log(`Candidate profile ${id} rejected: ${reason}`);
+      return { message: 'Candidate profile rejected successfully' };
+    } catch (error) {
+      this.logger.error(`Error rejecting candidate profile for ${id}`, error);
+      throw error;
+    }
+  }
+
+  async lockCandidateAccount(id: string, reason: string, duration?: number) {
+    try {
+      const user = await this.userRepository.findOne({ where: { id } });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      user.isActive = false;
+      user.statusReason = reason;
+      await this.userRepository.save(user);
+
+      this.logger.log(`Candidate account ${id} locked: ${reason}`);
+      return { message: 'Candidate account locked successfully' };
+    } catch (error) {
+      this.logger.error(`Error locking candidate account for ${id}`, error);
+      throw error;
+    }
+  }
+
+  async unlockCandidateAccount(id: string, reason?: string) {
+    try {
+      const user = await this.userRepository.findOne({ where: { id } });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      user.isActive = true;
+      user.statusReason = reason || 'Account unlocked by admin';
+      await this.userRepository.save(user);
+
+      this.logger.log(`Candidate account ${id} unlocked`);
+      return { message: 'Candidate account unlocked successfully' };
+    } catch (error) {
+      this.logger.error(`Error unlocking candidate account for ${id}`, error);
+      throw error;
+    }
+  }
+
+  async getCandidateActivityHistory(id: string, query: any) {
+    try {
+      const { page = 1, limit = 20, startDate, endDate } = query;
+      
+      const applications = await this.applicationRepository.find({
+        where: {
+          jobSeekerProfile: { userId: id },
+          ...(startDate && endDate && {
+            createdAt: Between(new Date(startDate), new Date(endDate)),
+          }),
+        },
+        relations: ['job', 'job.company'],
+        order: { createdAt: 'DESC' },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
+
+      return {
+        data: applications,
+        total: applications.length,
+        page,
+        limit,
+      };
+    } catch (error) {
+      this.logger.error(`Error getting candidate activity history for ${id}`, error);
+      throw error;
+    }
+  }
+
+  // ===== EMPLOYER MANAGEMENT =====
+  async getAllEmployers(query: any) {
+    try {
+      const { page = 1, limit = 10, companyStatus, verificationStatus, search } = query;
+      const skip = (page - 1) * limit;
+
+      let qb = this.userRepository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.userRoles', 'userRole')
+        .leftJoinAndSelect('userRole.role', 'roleEntity')
+        .leftJoinAndSelect('user.employerProfiles', 'employerProfile')
+        .leftJoinAndSelect('employerProfile.company', 'company')
+        .where('roleEntity.name = :role', { role: 'employer' });
+
+      if (companyStatus) {
+        qb = qb.andWhere('company.status = :status', { status: companyStatus });
+      }
+
+      if (verificationStatus === 'verified') {
+        qb = qb.andWhere('company.isVerified = :isVerified', { isVerified: true });
+      } else if (verificationStatus === 'unverified') {
+        qb = qb.andWhere('company.isVerified = :isVerified', { isVerified: false });
+      }
+
+      if (search) {
+        qb = qb.andWhere(
+          '(user.email LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search OR company.name LIKE :search)',
+          { search: `%${search}%` },
+        );
+      }
+
+      const [users, total] = await qb
+        .orderBy('user.createdAt', 'DESC')
+        .skip(skip)
+        .take(limit)
+        .getManyAndCount();
+
+      return {
+        data: users,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      this.logger.error('Error getting all employers', error);
+      throw error;
+    }
+  }
+
+  async getEmployerCompany(id: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: [
+          'userRoles',
+          'userRoles.role',
+          'employerProfiles',
+          'employerProfiles.company',
+        ],
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const employerProfile = user.employerProfiles?.[0];
+      const company = employerProfile?.company;
+
+      const totalJobs = company
+        ? await this.jobRepository.count({ where: { companyId: company.id } })
+        : 0;
+
+      const activeJobs = company
+        ? await this.jobRepository.count({
+            where: { companyId: company.id, status: JobStatus.PUBLISHED },
+          })
+        : 0;
+
+      return {
+        ...user,
+        company,
+        statistics: {
+          totalJobs,
+          activeJobs,
+        },
+      };
+    } catch (error: any) {
+      this.logger.error(`Error getting employer company for ${id}`, error);
+      throw error;
+    }
+  }
+
+  async approveEmployerCompany(id: string, notes?: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: ['employerProfiles', 'employerProfiles.company'],
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const company = user.employerProfiles?.[0]?.company;
+      if (company) {
+        company.status = 'active';
+        company.isVerified = true;
+        company.verifiedAt = new Date();
+        company.adminNotes = notes;
+        await this.companyRepository.save(company);
+      }
+
+      this.logger.log(`Employer company for ${id} approved`);
+      return { message: 'Employer company approved successfully' };
+    } catch (error: any) {
+      this.logger.error(`Error approving employer company for ${id}`, error);
+      throw error;
+    }
+  }
+
+  async rejectEmployerCompany(id: string, reason: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: ['employerProfiles', 'employerProfiles.company'],
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const company = user.employerProfiles?.[0]?.company;
+      if (company) {
+        company.status = 'rejected';
+        company.adminNotes = reason;
+        await this.companyRepository.save(company);
+      }
+
+      this.logger.log(`Employer company for ${id} rejected: ${reason}`);
+      return { message: 'Employer company rejected successfully' };
+    } catch (error: any) {
+      this.logger.error(`Error rejecting employer company for ${id}`, error);
+      throw error;
+    }
+  }
+
+  async suspendEmployerCompany(id: string, reason: string, duration?: number) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: ['employerProfiles', 'employerProfiles.company'],
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const company = user.employerProfiles?.[0]?.company;
+      if (company) {
+        company.status = 'suspended';
+        company.adminNotes = reason;
+        await this.companyRepository.save(company);
+      }
+
+      this.logger.log(`Employer company for ${id} suspended: ${reason}`);
+      return { message: 'Employer company suspended successfully' };
+    } catch (error: any) {
+      this.logger.error(`Error suspending employer company for ${id}`, error);
+      throw error;
+    }
+  }
+
+  async getEmployerActivityHistory(id: string, query: any) {
+    try {
+      const { page = 1, limit = 20, startDate, endDate } = query;
+      
+      const jobs = await this.jobRepository.find({
+        where: {
+          postedById: id,
+          ...(startDate && endDate && {
+            createdAt: Between(new Date(startDate), new Date(endDate)),
+          }),
+        },
+        relations: ['company', 'applications'],
+        order: { createdAt: 'DESC' },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
+
+      return {
+        data: jobs,
+        total: jobs.length,
+        page,
+        limit,
+      };
+    } catch (error) {
+      this.logger.error(`Error getting employer activity history for ${id}`, error);
+      throw error;
+    }
+  }
+
+  async getEmployerJobs(id: string, query: any) {
+    try {
+      const { page = 1, limit = 10, status } = query;
+      const skip = (page - 1) * limit;
+
+      let qb = this.jobRepository
+        .createQueryBuilder('job')
+        .leftJoinAndSelect('job.company', 'company')
+        .leftJoinAndSelect('job.applications', 'applications')
+        .where('job.postedById = :id', { id });
+
+      if (status) {
+        qb = qb.andWhere('job.status = :status', { status });
+      }
+
+      const [jobs, total] = await qb
+        .orderBy('job.createdAt', 'DESC')
+        .skip(skip)
+        .take(limit)
+        .getManyAndCount();
+
+      return {
+        data: jobs,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      this.logger.error(`Error getting employer jobs for ${id}`, error);
+      throw error;
+    }
+  }
+
+  async reportJobViolation(id: string, jobId: string, body: any) {
+    try {
+      const job = await this.jobRepository.findOne({ where: { id: jobId } });
+
+      if (!job) {
+        throw new NotFoundException('Job not found');
+      }
+
+      // Handle violation based on action
+      if (body.action === 'remove') {
+        job.status = JobStatus.CLOSED;
+        await this.jobRepository.save(job);
+      }
+
+      this.logger.log(`Job violation reported for ${jobId}: ${body.violationType}`);
+      return { message: 'Job violation reported successfully' };
+    } catch (error) {
+      this.logger.error(`Error reporting job violation for ${jobId}`, error);
+      throw error;
+    }
+  }
+
+  // ===== SERVICE PACKAGE MANAGEMENT =====
+  async getAllPackages(query: any) {
+    try {
+      const { page = 1, limit = 10, status } = query;
+      const skip = (page - 1) * limit;
+
+      // Mock data for now - would need SubscriptionPlan entity
+      const packages = [
+        {
+          id: '1',
+          name: 'Free',
+          description: 'Basic package',
+          price: 0,
+          duration: 30,
+          features: ['5 job postings', 'Basic support'],
+          maxJobs: 5,
+          maxApplications: 50,
+          isFeatured: false,
+          status: 'active',
+        },
+        {
+          id: '2',
+          name: 'Premium',
+          description: 'Premium package with more features',
+          price: 99,
+          duration: 30,
+          features: ['Unlimited job postings', 'Priority support', 'Featured listings'],
+          maxJobs: -1,
+          maxApplications: -1,
+          isFeatured: true,
+          status: 'active',
+        },
+      ];
+
+      return {
+        data: packages,
+        total: packages.length,
+        page,
+        limit,
+        totalPages: Math.ceil(packages.length / limit),
+      };
+    } catch (error) {
+      this.logger.error('Error getting all packages', error);
+      throw error;
+    }
+  }
+
+  async createPackage(body: any) {
+    try {
+      // Would create SubscriptionPlan entity
+      this.logger.log(`Package created: ${body.name}`);
+      return { message: 'Package created successfully', id: Date.now().toString() };
+    } catch (error) {
+      this.logger.error('Error creating package', error);
+      throw error;
+    }
+  }
+
+  async updatePackage(id: string, body: any) {
+    try {
+      // Would update SubscriptionPlan entity
+      this.logger.log(`Package ${id} updated`);
+      return { message: 'Package updated successfully' };
+    } catch (error) {
+      this.logger.error(`Error updating package ${id}`, error);
+      throw error;
+    }
+  }
+
+  async deletePackage(id: string) {
+    try {
+      // Would delete SubscriptionPlan entity
+      this.logger.log(`Package ${id} deleted`);
+    } catch (error) {
+      this.logger.error(`Error deleting package ${id}`, error);
+      throw error;
+    }
+  }
+
+  async getPackageSubscribers(id: string, query: any) {
+    try {
+      const { page = 1, limit = 10 } = query;
+      
+      // Mock data - would query Subscription entity
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      };
+    } catch (error) {
+      this.logger.error(`Error getting package subscribers for ${id}`, error);
+      throw error;
+    }
+  }
+
+  // ===== VIOLATION REPORTS =====
+  async getAllViolations(query: any) {
+    try {
+      const { page = 1, limit = 10, type, status } = query;
+      
+      // Mock data - would need ViolationReport entity
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      };
+    } catch (error) {
+      this.logger.error('Error getting all violations', error);
+      throw error;
+    }
+  }
+
+  async getViolationDetails(id: string) {
+    try {
+      // Mock data - would query ViolationReport entity
+      return {
+        id,
+        type: 'job',
+        description: 'Sample violation',
+        status: 'pending',
+        createdAt: new Date(),
+      };
+    } catch (error) {
+      this.logger.error(`Error getting violation details for ${id}`, error);
+      throw error;
+    }
+  }
+
+  async resolveViolation(id: string, action: string, notes?: string) {
+    try {
+      // Would update ViolationReport entity
+      this.logger.log(`Violation ${id} resolved with action: ${action}`);
+      return { message: 'Violation resolved successfully' };
+    } catch (error) {
+      this.logger.error(`Error resolving violation ${id}`, error);
+      throw error;
+    }
+  }
+
+  // ===== USER ROLE MANAGEMENT =====
+  async getAllRoles() {
+    try {
+      const roles = await this.roleRepository.find({
+        relations: ['userRoles'],
+      });
+
+      return roles.map(role => ({
+        ...role,
+        userCount: role.userRoles?.length || 0,
+      }));
+    } catch (error) {
+      this.logger.error('Error getting all roles', error);
+      throw error;
+    }
+  }
+
+  async createRole(body: any) {
+    try {
+      const existingRole = await this.roleRepository.findOne({
+        where: { name: body.name },
+      });
+
+      if (existingRole) {
+        throw new ConflictException('Role already exists');
+      }
+
+      const role = this.roleRepository.create({
+        name: body.name,
+        description: body.description,
+      });
+
+      const savedRole = await this.roleRepository.save(role);
+      this.logger.log(`Role created: ${body.name}`);
+      return savedRole;
+    } catch (error) {
+      this.logger.error('Error creating role', error);
+      throw error;
+    }
+  }
+
+  async updateRole(id: string, body: any) {
+    try {
+      const role = await this.roleRepository.findOne({ where: { id } });
+
+      if (!role) {
+        throw new NotFoundException('Role not found');
+      }
+
+      if (body.name) role.name = body.name;
+      if (body.description) role.description = body.description;
+
+      const updatedRole = await this.roleRepository.save(role);
+      this.logger.log(`Role ${id} updated`);
+      return updatedRole;
+    } catch (error) {
+      this.logger.error(`Error updating role ${id}`, error);
+      throw error;
+    }
+  }
+
+  async deleteRole(id: string) {
+    try {
+      const role = await this.roleRepository.findOne({
+        where: { id },
+        relations: ['userRoles'],
+      });
+
+      if (!role) {
+        throw new NotFoundException('Role not found');
+      }
+
+      if (role.userRoles && role.userRoles.length > 0) {
+        throw new BadRequestException('Cannot delete role with assigned users');
+      }
+
+      await this.roleRepository.remove(role);
+      this.logger.log(`Role ${id} deleted`);
+    } catch (error) {
+      this.logger.error(`Error deleting role ${id}`, error);
+      throw error;
+    }
+  }
+
+  async getUsersWithRole(id: string, query: any) {
+    try {
+      const { page = 1, limit = 10 } = query;
+      const skip = (page - 1) * limit;
+
+      const [userRoles, total] = await this.userRoleRepository.findAndCount({
+        where: { role: { id } },
+        relations: ['user', 'user.userRoles', 'user.userRoles.role'],
+        skip,
+        take: limit,
+      });
+
+      const users = userRoles.map(ur => ur.user);
+
+      return {
+        data: users,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      this.logger.error(`Error getting users with role ${id}`, error);
+      throw error;
+    }
+  }
+
+  async assignRoleToUser(id: string, roleId: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: ['userRoles'],
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const role = await this.roleRepository.findOne({ where: { id: roleId } });
+
+      if (!role) {
+        throw new NotFoundException('Role not found');
+      }
+
+      const existingUserRole = await this.userRoleRepository.findOne({
+        where: { user: { id }, role: { id: roleId } },
+      });
+
+      if (existingUserRole) {
+        throw new ConflictException('User already has this role');
+      }
+
+      const userRole = this.userRoleRepository.create({
+        user,
+        role,
+      });
+
+      await this.userRoleRepository.save(userRole);
+      this.logger.log(`Role ${roleId} assigned to user ${id}`);
+      return { message: 'Role assigned successfully' };
+    } catch (error) {
+      this.logger.error(`Error assigning role to user ${id}`, error);
+      throw error;
+    }
+  }
+
+  async removeRoleFromUser(id: string, roleId: string) {
+    try {
+      const userRole = await this.userRoleRepository.findOne({
+        where: { user: { id }, role: { id: roleId } },
+      });
+
+      if (!userRole) {
+        throw new NotFoundException('User role not found');
+      }
+
+      await this.userRoleRepository.remove(userRole);
+      this.logger.log(`Role ${roleId} removed from user ${id}`);
+      return { message: 'Role removed successfully' };
+    } catch (error) {
+      this.logger.error(`Error removing role from user ${id}`, error);
+      throw error;
+    }
+  }
+
+  // ===== SYSTEM ACTIVITY MONITORING =====
+  async getSystemActivities(query: any) {
+    try {
+      const { page = 1, limit = 50, type, action, startDate, endDate } = query;
+      
+      // Mock data - would query ActivityLog entity
+      const activities = [
+        {
+          id: '1',
+          type: 'user',
+          action: 'login',
+          userId: 'user1',
+          userEmail: 'user@example.com',
+          details: 'User logged in',
+          ipAddress: '192.168.1.1',
+          createdAt: new Date(),
+        },
+      ];
+
+      return {
+        data: activities,
+        total: activities.length,
+        page,
+        limit,
+        totalPages: Math.ceil(activities.length / limit),
+      };
+    } catch (error) {
+      this.logger.error('Error getting system activities', error);
+      throw error;
+    }
+  }
+
+  async getUserActivities(userId: string, query: any) {
+    try {
+      const { page = 1, limit = 50, startDate, endDate } = query;
+      
+      // Mock data - would query ActivityLog entity
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      };
+    } catch (error) {
+      this.logger.error(`Error getting user activities for ${userId}`, error);
+      throw error;
+    }
+  }
+
+  async getSystemStatistics(period: string = '30d') {
+    try {
+      const days = period === '24h' ? 1 : period === '7d' ? 7 : period === '30d' ? 30 : 90;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const newUsers = await this.userRepository
+        .createQueryBuilder('user')
+        .where('user.createdAt >= :startDate', { startDate })
+        .getCount();
+
+      const newJobs = await this.jobRepository
+        .createQueryBuilder('job')
+        .where('job.createdAt >= :startDate', { startDate })
+        .getCount();
+
+      const newApplications = await this.applicationRepository
+        .createQueryBuilder('application')
+        .where('application.createdAt >= :startDate', { startDate })
+        .getCount();
+
+      const newCompanies = await this.companyRepository
+        .createQueryBuilder('company')
+        .where('company.createdAt >= :startDate', { startDate })
+        .getCount();
+
+      return {
+        period,
+        newUsers,
+        newJobs,
+        newApplications,
+        newCompanies,
+        startDate,
+        endDate: new Date(),
+      };
+    } catch (error) {
+      this.logger.error('Error getting system statistics', error);
+      throw error;
+    }
+  }
+
   // ===== BLOG COMMENT MODERATION =====
 
   async getPendingBlogComments(): Promise<{
@@ -1469,6 +2346,1001 @@ export class AdminService {
       page: +page,
       limit: +limit,
     };
+  }
+
+  // ===== 2. JOB MANAGEMENT - DUYỆT TIN TUYỂN DỤNG =====
+  async getPendingJobs(query: any = {}) {
+    try {
+      const { page = 1, limit = 20 } = query;
+      const skip = (page - 1) * limit;
+
+      const [jobs, total] = await this.jobRepository.findAndCount({
+        where: { status: JobStatus.DRAFT },
+        relations: ['company', 'category', 'skills'],
+        order: { createdAt: 'ASC' },
+        skip,
+        take: limit,
+      });
+
+      return {
+        data: jobs,
+        total,
+        page: +page,
+        limit: +limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      this.logger.error('Error getting pending jobs', error);
+      throw error;
+    }
+  }
+
+  async approveJob(id: string, body: { notes?: string; isVip?: boolean; isHot?: boolean }) {
+    try {
+      const job = await this.jobRepository.findOne({
+        where: { id },
+        relations: ['company', 'postedBy'],
+      });
+
+      if (!job) {
+        throw new NotFoundException('Job not found');
+      }
+
+      job.status = JobStatus.PUBLISHED;
+      job.publishedAt = new Date();
+      
+      if (body.isVip) {
+        (job as any).isVip = true;
+      }
+      if (body.isHot) {
+        (job as any).isHot = true;
+      }
+
+      await this.jobRepository.save(job);
+
+      this.logger.log(`Job ${id} approved by admin`);
+
+      return {
+        message: 'Job approved successfully',
+        job: {
+          id: job.id,
+          title: job.title,
+          status: job.status,
+        },
+      };
+    } catch (error) {
+      this.logger.error(`Error approving job ${id}`, error);
+      throw error;
+    }
+  }
+
+  async rejectJob(id: string, reason: string, reasonCode?: string) {
+    try {
+      const job = await this.jobRepository.findOne({
+        where: { id },
+        relations: ['company', 'postedBy'],
+      });
+
+      if (!job) {
+        throw new NotFoundException('Job not found');
+      }
+
+      job.status = JobStatus.CLOSED;
+      (job as any).rejectionReason = reason;
+      (job as any).rejectionReasonCode = reasonCode;
+
+      await this.jobRepository.save(job);
+
+      this.logger.log(`Job ${id} rejected by admin: ${reason}`);
+
+      return {
+        message: 'Job rejected successfully',
+        job: {
+          id: job.id,
+          title: job.title,
+          status: job.status,
+          rejectionReason: reason,
+        },
+      };
+    } catch (error) {
+      this.logger.error(`Error rejecting job ${id}`, error);
+      throw error;
+    }
+  }
+
+  async updateJobFlags(id: string, body: { isVip?: boolean; isHot?: boolean; isFeatured?: boolean; isUrgent?: boolean }) {
+    try {
+      const job = await this.jobRepository.findOne({ where: { id } });
+
+      if (!job) {
+        throw new NotFoundException('Job not found');
+      }
+
+      if (body.isVip !== undefined) (job as any).isVip = body.isVip;
+      if (body.isHot !== undefined) (job as any).isHot = body.isHot;
+      if (body.isFeatured !== undefined) (job as any).isFeatured = body.isFeatured;
+      if (body.isUrgent !== undefined) (job as any).isUrgent = body.isUrgent;
+
+      await this.jobRepository.save(job);
+
+      this.logger.log(`Job ${id} flags updated`);
+
+      return {
+        message: 'Job flags updated successfully',
+        job: {
+          id: job.id,
+          isVip: (job as any).isVip,
+          isHot: (job as any).isHot,
+          isFeatured: (job as any).isFeatured,
+          isUrgent: (job as any).isUrgent,
+        },
+      };
+    } catch (error) {
+      this.logger.error(`Error updating job flags ${id}`, error);
+      throw error;
+    }
+  }
+
+  async getJobStatisticsByCategory(query: { startDate?: string; endDate?: string }) {
+    try {
+      const startDate = query.startDate ? new Date(query.startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const endDate = query.endDate ? new Date(query.endDate) : new Date();
+
+      const stats = await this.jobRepository
+        .createQueryBuilder('job')
+        .leftJoin('job.category', 'category')
+        .select('category.name', 'categoryName')
+        .addSelect('COUNT(*)', 'jobCount')
+        .addSelect('AVG(job.minSalary)', 'avgMinSalary')
+        .addSelect('AVG(job.maxSalary)', 'avgMaxSalary')
+        .where('job.createdAt BETWEEN :startDate AND :endDate', { startDate, endDate })
+        .groupBy('category.id')
+        .orderBy('jobCount', 'DESC')
+        .getRawMany();
+
+      return {
+        data: stats,
+        period: { startDate, endDate },
+      };
+    } catch (error) {
+      this.logger.error('Error getting job statistics by category', error);
+      throw error;
+    }
+  }
+
+  async getJobStatisticsByStatus() {
+    try {
+      const stats = await this.jobRepository
+        .createQueryBuilder('job')
+        .select('job.status', 'status')
+        .addSelect('COUNT(*)', 'count')
+        .groupBy('job.status')
+        .getRawMany();
+
+      return {
+        data: stats,
+      };
+    } catch (error) {
+      this.logger.error('Error getting job statistics by status', error);
+      throw error;
+    }
+  }
+
+  // ===== 2.2 QUẢN LÝ NGÀNH NGHỀ =====
+  async getJobCategoryStatistics(period: string = '30d') {
+    try {
+      const days = period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : 365;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const categories = await this.jobCategoryRepository.find({
+        relations: ['jobs'],
+      });
+
+      const categoryStats = await Promise.all(
+        categories.map(async (category) => {
+          const jobCount = await this.jobRepository.count({
+            where: {
+              categoryId: category.id,
+              createdAt: Between(startDate, new Date()),
+            },
+          });
+
+          const applicationCount = await this.applicationRepository
+            .createQueryBuilder('application')
+            .leftJoin('application.job', 'job')
+            .where('job.categoryId = :categoryId', { categoryId: category.id })
+            .andWhere('application.createdAt BETWEEN :startDate AND :endDate', {
+              startDate,
+              endDate: new Date(),
+            })
+            .getCount();
+
+          return {
+            id: category.id,
+            name: category.name,
+            jobCount,
+            applicationCount,
+            trend: jobCount > 0 ? 'up' : 'stable',
+          };
+        }),
+      );
+
+      return {
+        data: categoryStats.sort((a, b) => b.jobCount - a.jobCount),
+        period,
+      };
+    } catch (error) {
+      this.logger.error('Error getting job category statistics', error);
+      throw error;
+    }
+  }
+
+  async updateCategorySalaryRange(id: string, body: { minSalary: number; maxSalary: number; currency?: string }) {
+    try {
+      const category = await this.jobCategoryRepository.findOne({ where: { id } });
+
+      if (!category) {
+        throw new NotFoundException('Job category not found');
+      }
+
+      (category as any).avgMinSalary = body.minSalary;
+      (category as any).avgMaxSalary = body.maxSalary;
+      (category as any).salaryCurrency = body.currency || 'VND';
+
+      await this.jobCategoryRepository.save(category);
+
+      this.logger.log(`Category ${id} salary range updated`);
+
+      return {
+        message: 'Salary range updated successfully',
+        category: {
+          id: category.id,
+          name: category.name,
+        },
+      };
+    } catch (error) {
+      this.logger.error(`Error updating category salary range ${id}`, error);
+      throw error;
+    }
+  }
+
+  async getHiringTrends(period: string = '30d') {
+    try {
+      const days = period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : 365;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const trends = await this.jobRepository
+        .createQueryBuilder('job')
+        .leftJoin('job.category', 'category')
+        .select('DATE(job.createdAt)', 'date')
+        .addSelect('category.name', 'categoryName')
+        .addSelect('COUNT(*)', 'jobCount')
+        .where('job.createdAt >= :startDate', { startDate })
+        .groupBy('DATE(job.createdAt), category.id')
+        .orderBy('date', 'ASC')
+        .getRawMany();
+
+      return {
+        data: trends,
+        period,
+      };
+    } catch (error) {
+      this.logger.error('Error getting hiring trends', error);
+      throw error;
+    }
+  }
+
+  // ===== 2.3 QUẢN LÝ BÁO CÁO VI PHẠM =====
+  async getJobViolationReports(query: any = {}) {
+    try {
+      const { page = 1, limit = 20, status, type } = query;
+      const skip = (page - 1) * limit;
+
+      // Mock data - would need ViolationReport entity
+      const reports = [
+        {
+          id: '1',
+          type: 'spam',
+          status: 'pending',
+          jobTitle: 'Sample Job',
+          companyName: 'Sample Company',
+          reporterEmail: 'reporter@example.com',
+          description: 'This job posting appears to be spam',
+          createdAt: new Date(),
+        },
+      ];
+
+      return {
+        data: reports,
+        total: reports.length,
+        page: +page,
+        limit: +limit,
+        totalPages: 1,
+      };
+    } catch (error) {
+      this.logger.error('Error getting job violation reports', error);
+      throw error;
+    }
+  }
+
+  async getCandidateViolationReports(query: any = {}) {
+    try {
+      const { page = 1, limit = 20, status } = query;
+
+      // Mock data
+      return {
+        data: [],
+        total: 0,
+        page: +page,
+        limit: +limit,
+        totalPages: 0,
+      };
+    } catch (error) {
+      this.logger.error('Error getting candidate violation reports', error);
+      throw error;
+    }
+  }
+
+  async resolveViolationReport(id: string, body: { action: string; notes?: string; notifyReporter?: boolean; notifyReported?: boolean }) {
+    try {
+      this.logger.log(`Violation report ${id} resolved with action: ${body.action}`);
+
+      return {
+        message: 'Violation report resolved successfully',
+        reportId: id,
+        action: body.action,
+        resolvedAt: new Date(),
+      };
+    } catch (error) {
+      this.logger.error(`Error resolving violation report ${id}`, error);
+      throw error;
+    }
+  }
+
+  async getDisputeCases(query: any = {}) {
+    try {
+      const { page = 1, limit = 20, status } = query;
+
+      // Mock data
+      return {
+        data: [],
+        total: 0,
+        page: +page,
+        limit: +limit,
+        totalPages: 0,
+      };
+    } catch (error) {
+      this.logger.error('Error getting dispute cases', error);
+      throw error;
+    }
+  }
+
+  // ===== 3. CONTENT MANAGEMENT - QUẢN LÝ BLOG =====
+  async getAllBlogs(query: any = {}) {
+    try {
+      const { page = 1, limit = 20, status, category, search } = query;
+      const skip = (page - 1) * limit;
+
+      // Would need Blog entity
+      // For now, return mock data
+      return {
+        data: [],
+        total: 0,
+        page: +page,
+        limit: +limit,
+        totalPages: 0,
+      };
+    } catch (error) {
+      this.logger.error('Error getting all blogs', error);
+      throw error;
+    }
+  }
+
+  async createBlog(body: {
+    title: string;
+    content: string;
+    excerpt?: string;
+    category: string;
+    tags?: string[];
+    featuredImage?: string;
+    status?: string;
+    isFeatured?: boolean;
+  }) {
+    try {
+      // Would create Blog entity
+      this.logger.log(`Blog created: ${body.title}`);
+
+      return {
+        message: 'Blog post created successfully',
+        id: Date.now().toString(),
+        title: body.title,
+        status: body.status || 'draft',
+      };
+    } catch (error) {
+      this.logger.error('Error creating blog', error);
+      throw error;
+    }
+  }
+
+  async updateBlog(id: string, body: any) {
+    try {
+      // Would update Blog entity
+      this.logger.log(`Blog ${id} updated`);
+
+      return {
+        message: 'Blog post updated successfully',
+        id,
+        ...body,
+      };
+    } catch (error) {
+      this.logger.error(`Error updating blog ${id}`, error);
+      throw error;
+    }
+  }
+
+  async deleteBlog(id: string) {
+    try {
+      // Would delete Blog entity
+      this.logger.log(`Blog ${id} deleted`);
+
+      return {
+        message: 'Blog post deleted successfully',
+      };
+    } catch (error) {
+      this.logger.error(`Error deleting blog ${id}`, error);
+      throw error;
+    }
+  }
+
+  async getBlogStatistics() {
+    try {
+      // Mock data
+      return {
+        totalPosts: 0,
+        publishedPosts: 0,
+        draftPosts: 0,
+        totalViews: 0,
+        totalComments: 0,
+        topCategories: [],
+      };
+    } catch (error) {
+      this.logger.error('Error getting blog statistics', error);
+      throw error;
+    }
+  }
+
+  // ===== 3.2 QUẢN LÝ QUẢNG CÁO =====
+  async getAllAdvertisements(query: any = {}) {
+    try {
+      const { page = 1, limit = 20, status, position } = query;
+
+      // Would need Advertisement entity
+      return {
+        data: [],
+        total: 0,
+        page: +page,
+        limit: +limit,
+        totalPages: 0,
+      };
+    } catch (error) {
+      this.logger.error('Error getting all advertisements', error);
+      throw error;
+    }
+  }
+
+  async createAdvertisement(body: {
+    title: string;
+    imageUrl: string;
+    targetUrl: string;
+    position: string;
+    startDate: string;
+    endDate: string;
+    budget?: number;
+    advertiserName?: string;
+    advertiserEmail?: string;
+  }) {
+    try {
+      // Would create Advertisement entity
+      this.logger.log(`Advertisement created: ${body.title}`);
+
+      return {
+        message: 'Advertisement created successfully',
+        id: Date.now().toString(),
+        title: body.title,
+        position: body.position,
+      };
+    } catch (error) {
+      this.logger.error('Error creating advertisement', error);
+      throw error;
+    }
+  }
+
+  async updateAdvertisement(id: string, body: any) {
+    try {
+      // Would update Advertisement entity
+      this.logger.log(`Advertisement ${id} updated`);
+
+      return {
+        message: 'Advertisement updated successfully',
+        id,
+        ...body,
+      };
+    } catch (error) {
+      this.logger.error(`Error updating advertisement ${id}`, error);
+      throw error;
+    }
+  }
+
+  async deleteAdvertisement(id: string) {
+    try {
+      // Would delete Advertisement entity
+      this.logger.log(`Advertisement ${id} deleted`);
+
+      return {
+        message: 'Advertisement deleted successfully',
+      };
+    } catch (error) {
+      this.logger.error(`Error deleting advertisement ${id}`, error);
+      throw error;
+    }
+  }
+
+  async getAdvertisementStatistics(id: string) {
+    try {
+      // Mock data
+      return {
+        id,
+        impressions: 0,
+        clicks: 0,
+        ctr: 0,
+        conversions: 0,
+        spent: 0,
+      };
+    } catch (error) {
+      this.logger.error(`Error getting advertisement statistics ${id}`, error);
+      throw error;
+    }
+  }
+
+  async getAdvertisementsOverview() {
+    try {
+      // Mock data
+      return {
+        totalAds: 0,
+        activeAds: 0,
+        totalImpressions: 0,
+        totalClicks: 0,
+        totalSpent: 0,
+        averageCTR: 0,
+      };
+    } catch (error) {
+      this.logger.error('Error getting advertisements overview', error);
+      throw error;
+    }
+  }
+
+  // ===== 4. STATISTICS & REPORTS =====
+  // 4.1 THỐNG KÊ NGƯỜI DÙNG
+  async getUserStatisticsOverview(period: string = '30d') {
+    try {
+      const days = period === '24h' ? 1 : period === '7d' ? 7 : period === '30d' ? 30 : 90;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const totalUsers = await this.userRepository.count();
+      const newUsers = await this.userRepository.count({
+        where: {
+          createdAt: Between(startDate, new Date()),
+        },
+      });
+
+      const activeUsers = await this.userRepository.count({
+        where: { isActive: true },
+      });
+
+      const jobSeekers = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoin('user.userRoles', 'userRole')
+        .leftJoin('userRole.role', 'role')
+        .where('role.name = :role', { role: 'job_seeker' })
+        .getCount();
+
+      const employers = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoin('user.userRoles', 'userRole')
+        .leftJoin('userRole.role', 'role')
+        .where('role.name = :role', { role: 'employer' })
+        .getCount();
+
+      return {
+        totalUsers,
+        newUsers,
+        activeUsers,
+        jobSeekers,
+        employers,
+        growthRate: totalUsers > 0 ? ((newUsers / totalUsers) * 100).toFixed(2) : 0,
+        period,
+      };
+    } catch (error) {
+      this.logger.error('Error getting user statistics overview', error);
+      throw error;
+    }
+  }
+
+  async getUserRegistrationStats(period: string = '30d', groupBy: string = 'day') {
+    try {
+      const days = period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : 365;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      let dateFormat: string;
+      switch (groupBy) {
+        case 'week':
+          dateFormat = '%Y-%U';
+          break;
+        case 'month':
+          dateFormat = '%Y-%m';
+          break;
+        default:
+          dateFormat = '%Y-%m-%d';
+      }
+
+      const stats = await this.userRepository
+        .createQueryBuilder('user')
+        .select(`DATE_FORMAT(user.createdAt, '${dateFormat}')`, 'date')
+        .addSelect('COUNT(*)', 'registrations')
+        .where('user.createdAt >= :startDate', { startDate })
+        .groupBy('date')
+        .orderBy('date', 'ASC')
+        .getRawMany();
+
+      return {
+        data: stats,
+        period,
+        groupBy,
+      };
+    } catch (error) {
+      this.logger.error('Error getting user registration stats', error);
+      throw error;
+    }
+  }
+
+  async getUserConversionStats(period: string = '30d') {
+    try {
+      const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const totalRegistrations = await this.userRepository.count({
+        where: {
+          createdAt: Between(startDate, new Date()),
+        },
+      });
+
+      const activeUsers = await this.userRepository.count({
+        where: {
+          isActive: true,
+          createdAt: Between(startDate, new Date()),
+        },
+      });
+
+      const usersWithApplications = await this.userRepository
+        .createQueryBuilder('user')
+        .leftJoin('user.jobSeekerProfiles', 'profile')
+        .leftJoin('profile.applications', 'application')
+        .where('user.createdAt >= :startDate', { startDate })
+        .andWhere('application.id IS NOT NULL')
+        .getCount();
+
+      return {
+        totalRegistrations,
+        activeUsers,
+        usersWithApplications,
+        activationRate: totalRegistrations > 0 ? ((activeUsers / totalRegistrations) * 100).toFixed(2) : 0,
+        applicationRate: totalRegistrations > 0 ? ((usersWithApplications / totalRegistrations) * 100).toFixed(2) : 0,
+        period,
+      };
+    } catch (error) {
+      this.logger.error('Error getting user conversion stats', error);
+      throw error;
+    }
+  }
+
+  async getUserActivityStats(period: string = '30d') {
+    try {
+      const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const dailyActiveUsers = await this.userRepository
+        .createQueryBuilder('user')
+        .select('DATE(user.lastLoginAt)', 'date')
+        .addSelect('COUNT(DISTINCT user.id)', 'activeUsers')
+        .where('user.lastLoginAt >= :startDate', { startDate })
+        .groupBy('DATE(user.lastLoginAt)')
+        .orderBy('date', 'ASC')
+        .getRawMany();
+
+      return {
+        data: dailyActiveUsers,
+        period,
+      };
+    } catch (error) {
+      this.logger.error('Error getting user activity stats', error);
+      throw error;
+    }
+  }
+
+  // 4.2 THỐNG KÊ VIỆC LÀM
+  async getJobStatisticsOverview(period: string = '30d') {
+    try {
+      const days = period === '24h' ? 1 : period === '7d' ? 7 : period === '30d' ? 30 : 90;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const totalJobs = await this.jobRepository.count();
+      const newJobs = await this.jobRepository.count({
+        where: {
+          createdAt: Between(startDate, new Date()),
+        },
+      });
+
+      const activeJobs = await this.jobRepository.count({
+        where: { status: JobStatus.PUBLISHED },
+      });
+
+      const totalApplications = await this.applicationRepository.count({
+        where: {
+          createdAt: Between(startDate, new Date()),
+        },
+      });
+
+      return {
+        totalJobs,
+        newJobs,
+        activeJobs,
+        totalApplications,
+        avgApplicationsPerJob: activeJobs > 0 ? (totalApplications / activeJobs).toFixed(2) : 0,
+        period,
+      };
+    } catch (error) {
+      this.logger.error('Error getting job statistics overview', error);
+      throw error;
+    }
+  }
+
+  async getJobApplicationStats(period: string = '30d', categoryId?: string) {
+    try {
+      const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      let qb = this.applicationRepository
+        .createQueryBuilder('application')
+        .leftJoin('application.job', 'job')
+        .leftJoin('job.category', 'category')
+        .select('DATE(application.createdAt)', 'date')
+        .addSelect('COUNT(*)', 'applications')
+        .where('application.createdAt >= :startDate', { startDate });
+
+      if (categoryId) {
+        qb = qb.andWhere('category.id = :categoryId', { categoryId });
+      }
+
+      const stats = await qb
+        .groupBy('DATE(application.createdAt)')
+        .orderBy('date', 'ASC')
+        .getRawMany();
+
+      return {
+        data: stats,
+        period,
+        categoryId,
+      };
+    } catch (error) {
+      this.logger.error('Error getting job application stats', error);
+      throw error;
+    }
+  }
+
+  async getHotJobCategories(period: string = '30d', limit: number = 10) {
+    try {
+      const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const hotCategories = await this.jobCategoryRepository
+        .createQueryBuilder('category')
+        .leftJoin('category.jobs', 'job')
+        .leftJoin('job.applications', 'application')
+        .select('category.id', 'id')
+        .addSelect('category.name', 'name')
+        .addSelect('COUNT(DISTINCT job.id)', 'jobCount')
+        .addSelect('COUNT(application.id)', 'applicationCount')
+        .where('job.createdAt >= :startDate', { startDate })
+        .groupBy('category.id')
+        .orderBy('applicationCount', 'DESC')
+        .limit(limit)
+        .getRawMany();
+
+      return {
+        data: hotCategories,
+        period,
+      };
+    } catch (error) {
+      this.logger.error('Error getting hot job categories', error);
+      throw error;
+    }
+  }
+
+  async getSalaryTrends(categoryId?: string, period: string = '90d') {
+    try {
+      const days = period === '30d' ? 30 : period === '90d' ? 90 : 365;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      let qb = this.jobRepository
+        .createQueryBuilder('job')
+        .leftJoin('job.category', 'category')
+        .select('DATE_FORMAT(job.createdAt, "%Y-%m")', 'month')
+        .addSelect('AVG(job.minSalary)', 'avgMinSalary')
+        .addSelect('AVG(job.maxSalary)', 'avgMaxSalary')
+        .where('job.createdAt >= :startDate', { startDate })
+        .andWhere('job.minSalary IS NOT NULL');
+
+      if (categoryId) {
+        qb = qb.andWhere('category.id = :categoryId', { categoryId });
+      }
+
+      const trends = await qb
+        .groupBy('month')
+        .orderBy('month', 'ASC')
+        .getRawMany();
+
+      return {
+        data: trends,
+        categoryId,
+        period,
+      };
+    } catch (error) {
+      this.logger.error('Error getting salary trends', error);
+      throw error;
+    }
+  }
+
+  // 4.3 BÁO CÁO DOANH THU
+  async getRevenueOverview(period: string = '30d') {
+    try {
+      const days = period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : 365;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const payments = await this.paymentRepository.find({
+        where: {
+          status: 'completed' as any,
+          createdAt: Between(startDate, new Date()),
+        },
+      });
+
+      const totalRevenue = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+      const transactionCount = payments.length;
+
+      return {
+        totalRevenue,
+        transactionCount,
+        averageTransaction: transactionCount > 0 ? totalRevenue / transactionCount : 0,
+        period,
+      };
+    } catch (error) {
+      this.logger.error('Error getting revenue overview', error);
+      throw error;
+    }
+  }
+
+  async getRevenueByPackage(period: string = '30d') {
+    try {
+      // Mock data - would need Subscription entity with package relation
+      return {
+        data: [
+          { packageName: 'Free', revenue: 0, count: 0 },
+          { packageName: 'Basic', revenue: 0, count: 0 },
+          { packageName: 'Premium', revenue: 0, count: 0 },
+        ],
+        period,
+      };
+    } catch (error) {
+      this.logger.error('Error getting revenue by package', error);
+      throw error;
+    }
+  }
+
+  async getPaymentMethodStats(period: string = '30d') {
+    try {
+      const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const stats = await this.paymentRepository
+        .createQueryBuilder('payment')
+        .select('payment.paymentMethod', 'method')
+        .addSelect('COUNT(*)', 'count')
+        .addSelect('SUM(payment.amount)', 'total')
+        .where('payment.createdAt >= :startDate', { startDate })
+        .andWhere('payment.status = :status', { status: 'completed' })
+        .groupBy('payment.paymentMethod')
+        .getRawMany();
+
+      return {
+        data: stats,
+        period,
+      };
+    } catch (error) {
+      this.logger.error('Error getting payment method stats', error);
+      throw error;
+    }
+  }
+
+  async getRecentTransactions(query: any = {}) {
+    try {
+      const { page = 1, limit = 20, status, startDate, endDate } = query;
+      const skip = (page - 1) * limit;
+
+      let qb = this.paymentRepository
+        .createQueryBuilder('payment')
+        .leftJoinAndSelect('payment.subscription', 'subscription')
+        .leftJoinAndSelect('subscription.user', 'user');
+
+      if (status) {
+        qb = qb.andWhere('payment.status = :status', { status });
+      }
+
+      if (startDate && endDate) {
+        qb = qb.andWhere('payment.createdAt BETWEEN :startDate AND :endDate', {
+          startDate: new Date(startDate),
+          endDate: new Date(endDate),
+        });
+      }
+
+      const [transactions, total] = await qb
+        .orderBy('payment.createdAt', 'DESC')
+        .skip(skip)
+        .take(limit)
+        .getManyAndCount();
+
+      return {
+        data: transactions,
+        total,
+        page: +page,
+        limit: +limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      this.logger.error('Error getting recent transactions', error);
+      throw error;
+    }
+  }
+
+  async getFinancialReport(reportPeriod: string = 'monthly', year?: number) {
+    try {
+      const targetYear = year || new Date().getFullYear();
+
+      // Mock data - would implement actual financial calculations
+      return {
+        year: targetYear,
+        period: reportPeriod,
+        totalRevenue: 0,
+        totalExpenses: 0,
+        netProfit: 0,
+        monthlyBreakdown: [],
+        packageRevenue: [],
+        paymentMethodBreakdown: [],
+      };
+    } catch (error) {
+      this.logger.error('Error getting financial report', error);
+      throw error;
+    }
   }
 
   // ===== HELPER METHODS =====

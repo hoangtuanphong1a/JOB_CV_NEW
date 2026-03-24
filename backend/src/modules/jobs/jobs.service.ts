@@ -19,6 +19,7 @@ import { HRService } from '../hr/hr.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { JobView } from '../common/entities/job-view.entity';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { RoleName } from '../common/entities/role.entity';
 
 @Injectable()
 export class JobsService {
@@ -89,12 +90,43 @@ export class JobsService {
       category = foundCategory;
     }
 
-    // Create job
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+    // Load user with roles for permission check
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['userRoles', 'userRoles.role'],
+    });
     if (!user) {
       throw new BadRequestException('User not found');
     }
 
+    // Check subscription limits before creating job
+    // Skip subscription check for job seekers (they can post for free)
+    const isJobSeeker = user.userRoles?.some(
+      (ur) => ur.role?.name === RoleName.JOB_SEEKER
+    );
+
+    console.log('🔍 User role check:', {
+      userId: user.id,
+      userRoles: user.userRoles?.map(ur => ur.role?.name),
+      isJobSeeker
+    });
+
+    if (!isJobSeeker) {
+      console.log('📋 User is not job seeker, checking subscription...');
+      const subscriptionCheck = await this.subscriptionsService.canPostJob(companyId);
+
+      if (!subscriptionCheck.canPost) {
+        console.error('❌ Subscription limit reached:', subscriptionCheck.reason);
+        throw new BadRequestException(
+          subscriptionCheck.reason || 'Subscription limit reached. Cannot create job.',
+        );
+      }
+      console.log('✅ Subscription check passed');
+    } else {
+      console.log('✅ Job seeker detected - skipping subscription check');
+    }
+
+    // Create job object
     const job = this.jobRepository.create({
       ...jobData,
       company,
@@ -104,16 +136,6 @@ export class JobsService {
       publishedAt: new Date(),
       expiresAt: expiresAt ? new Date(expiresAt) : undefined,
     });
-
-    // Check subscription limits before creating job
-    const subscriptionCheck = await this.subscriptionsService.canPostJob(companyId);
-
-    if (!subscriptionCheck.canPost) {
-      console.error('❌ Subscription limit reached:', subscriptionCheck.reason);
-      throw new BadRequestException(
-        subscriptionCheck.reason || 'Subscription limit reached. Cannot create job.',
-      );
-    }
 
     // Save job first to get the ID
     console.log('💾 Saving job to database...');

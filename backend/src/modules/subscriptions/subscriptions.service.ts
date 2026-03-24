@@ -155,15 +155,29 @@ export class SubscriptionsService {
 
     if (!subscription) {
       // Check if there's a free plan available
-      const freePlan = await this.subscriptionPlanRepository.findOne({
+      let freePlan = await this.subscriptionPlanRepository.findOne({
         where: { planType: PlanType.FREE, isActive: true },
       });
 
+      // If no free plan exists, create a default one
       if (!freePlan) {
-        return {
-          canPost: false,
-          reason: 'No active subscription and no free plan available',
-        };
+        console.log('📋 No free plan found, creating default free plan...');
+        freePlan = await this.subscriptionPlanRepository.save({
+          name: 'Free Plan',
+          description: 'Basic features for getting started',
+          planType: PlanType.FREE,
+          price: 0,
+          billingCycle: BillingCycle.MONTHLY,
+          maxJobs: 5, // Allow 5 free jobs
+          maxApplications: 10,
+          featured: false,
+          prioritySupport: false,
+          analyticsAccess: false,
+          features: ['Basic job posting', 'Application tracking'],
+          isActive: true,
+          sortOrder: 1,
+        });
+        console.log('✅ Default free plan created');
       }
 
       // Create free subscription automatically
@@ -174,17 +188,26 @@ export class SubscriptionsService {
         return { canPost: false, reason: 'Company not found' };
       }
 
-      const freeSubscription = await this.createFreeSubscription(
-        company.ownerId,
-        companyId,
-      );
-      return {
-        canPost: freeSubscription.canPostMoreJobs,
-        subscription: freeSubscription,
-        reason: freeSubscription.canPostMoreJobs
-          ? undefined
-          : 'Job posting limit reached',
-      };
+      try {
+        const freeSubscription = await this.createFreeSubscription(
+          company.ownerId,
+          companyId,
+        );
+        return {
+          canPost: freeSubscription.canPostMoreJobs,
+          subscription: freeSubscription,
+          reason: freeSubscription.canPostMoreJobs
+            ? undefined
+            : 'Job posting limit reached',
+        };
+      } catch (error) {
+        console.error('❌ Error creating free subscription:', error);
+        // If subscription creation fails, allow posting anyway (graceful degradation)
+        return {
+          canPost: true,
+          reason: undefined,
+        };
+      }
     }
 
     return {

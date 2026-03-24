@@ -73,7 +73,7 @@ export default function JobsPage() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set()); // Use string IDs
   const [sortBy, setSortBy] = useState<"newest" | "salary" | "relevant">(
-    "newest"
+    "newest",
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -84,46 +84,46 @@ export default function JobsPage() {
 
   // Fetch jobs on component mount and whenever the component is remounted
   useEffect(() => {
-    console.log('🚀 Jobs page mounted, fetching jobs...');
-    console.log('🌐 API URL from env:', process.env.NEXT_PUBLIC_API_URL);
+    console.log("🚀 Jobs page mounted, fetching jobs...");
+    console.log("🌐 API URL from env:", process.env.NEXT_PUBLIC_API_URL);
     fetchJobs();
   }, []);
 
   // Force refresh when refresh parameter is present (from job creation redirect)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const refreshParam = urlParams.get('refresh');
-    const successParam = urlParams.get('success');
-    const jobIdParam = urlParams.get('jobId');
+    const refreshParam = urlParams.get("refresh");
+    const successParam = urlParams.get("success");
+    const jobIdParam = urlParams.get("jobId");
 
     if (refreshParam) {
-      console.log('🔄 Refresh parameter detected, forcing jobs fetch...');
+      console.log("🔄 Refresh parameter detected, forcing jobs fetch...");
       fetchJobs();
 
       // Show success toast if redirected from job creation
-      if (successParam === 'true') {
-        console.log('🎉 Job creation success detected, showing toast...');
-        console.log('🆔 Job ID:', jobIdParam);
+      if (successParam === "true") {
+        console.log("🎉 Job creation success detected, showing toast...");
+        console.log("🆔 Job ID:", jobIdParam);
 
-        toast.success('🎉 Đăng tin tuyển dụng thành công!', {
+        toast.success("🎉 Đăng tin tuyển dụng thành công!", {
           duration: 5000,
           style: {
-            background: '#10B981',
-            color: '#fff',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            border: 'none',
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+            background: "#10B981",
+            color: "#fff",
+            fontSize: "16px",
+            fontWeight: "bold",
+            border: "none",
+            borderRadius: "8px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
           },
-          icon: '✅'
+          icon: "✅",
         });
       }
 
       // Clean up URL after showing success message
       setTimeout(() => {
-        window.history.replaceState({}, '', '/jobs');
-        console.log('🧹 URL cleaned up after success notification');
+        window.history.replaceState({}, "", "/jobs");
+        console.log("🧹 URL cleaned up after success notification");
       }, 1000);
     }
   }, []);
@@ -142,40 +142,41 @@ export default function JobsPage() {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        console.log('Tab became visible, refreshing jobs...');
+        console.log("Tab became visible, refreshing jobs...");
         fetchJobs();
       }
     };
 
     const handleFocus = () => {
-      console.log('Window focused, refreshing jobs...');
+      console.log("Window focused, refreshing jobs...");
       fetchJobs();
     };
 
     // Also refresh on page load/navigation
     const handlePageShow = (event: PageTransitionEvent) => {
       if (!event.persisted) {
-        console.log('Page loaded/refreshed, fetching jobs...');
+        console.log("Page loaded/refreshed, fetching jobs...");
         fetchJobs();
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('pageshow', handlePageShow as EventListener);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("pageshow", handlePageShow as EventListener);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('pageshow', handlePageShow as EventListener);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("pageshow", handlePageShow as EventListener);
     };
   }, []);
 
   // Also add a periodic refresh every 30 seconds for active users
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!document.hidden) { // Only refresh if tab is active
-        console.log('Periodic refresh: checking for new jobs...');
+      if (!document.hidden) {
+        // Only refresh if tab is active
+        console.log("Periodic refresh: checking for new jobs...");
         fetchJobs();
       }
     }, 30000); // 30 seconds
@@ -186,95 +187,100 @@ export default function JobsPage() {
   const fetchJobs = async () => {
     try {
       setIsLoading(true);
-      console.log('🔍 Starting to fetch jobs from API...');
+      console.log("🔍 Starting to fetch jobs from API...");
 
       // Use the api service which handles authentication automatically
-      console.log('🌐 Making API call to /jobs...');
+      console.log("🌐 Making API call to /jobs...");
 
-      const response = await api.get('/jobs');
-      console.log('📡 API Response received');
-      console.log('📄 Full response:', response);
+      const response = await api.get("/jobs");
+      console.log("📡 API Response received");
+      console.log("📄 Full response:", response);
 
       const data = response.data;
       // API returns paginated response: {data: [...], total, page, limit, totalPages}
-      console.log('✅ Jobs API call successful');
-      console.log('📊 Jobs fetched from API:', data.data?.length || 0, 'jobs');
-      console.log('📋 Jobs data sample:', data.data?.slice(0, 3)); // Show first 3 jobs
-      console.log('🔢 Total jobs in response:', data.total);
+      console.log("✅ Jobs API call successful");
+      console.log("📊 Jobs fetched from API:", data.data?.length || 0, "jobs");
+      console.log("📋 Jobs data sample:", data.data?.slice(0, 3)); // Show first 3 jobs
+      console.log("🔢 Total jobs in response:", data.total);
 
       if (data.data && data.data.length > 0) {
-        console.log('📋 First job details:', {
+        console.log("📋 First job details:", {
           id: data.data[0].id,
           title: data.data[0].title,
           company: data.data[0].company?.name,
           status: data.data[0].status,
-          createdAt: data.data[0].createdAt
+          createdAt: data.data[0].createdAt,
         });
       } else {
-        console.log('⚠️ No jobs data in response');
+        console.log("⚠️ No jobs data in response");
       }
 
       setJobs(data.data || []);
-      console.log('💾 Jobs stored in state:', data.data?.length || 0, 'jobs');
+      console.log("💾 Jobs stored in state:", data.data?.length || 0, "jobs");
     } catch (error) {
-      console.error('❌ Error fetching jobs:', error);
-      console.error('❌ Error details:', error instanceof Error ? error.message : String(error));
-      console.error('❌ Full error object:', error);
+      console.error("❌ Error fetching jobs:", error);
+      console.error(
+        "❌ Error details:",
+        error instanceof Error ? error.message : String(error),
+      );
+      console.error("❌ Full error object:", error);
 
       // Try to get more details from axios error
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((error as any)?.response) {
-        console.error('❌ Response status:', (error as any).response.status);
-        console.error('❌ Response data:', (error as any).response.data);
+        console.error("❌ Response status:", (error as any).response.status);
+        console.error("❌ Response data:", (error as any).response.data);
       }
 
       setJobs([]);
     } finally {
       setIsLoading(false);
-      console.log('🏁 Job fetching completed');
+      console.log("🏁 Job fetching completed");
     }
   };
 
   // Helper functions
   const getJobSalaryDisplay = (job: Job): string => {
-    if (job.salaryType === 'negotiable') {
-      return 'Thương lượng';
+    if (job.salaryType === "negotiable") {
+      return "Thương lượng";
     }
     if (job.minSalary && job.maxSalary) {
-      return `${job.currency || 'VNĐ'} ${job.minSalary.toLocaleString()} - ${job.maxSalary.toLocaleString()}`;
+      return `${job.currency || "VNĐ"} ${job.minSalary.toLocaleString()} - ${job.maxSalary.toLocaleString()}`;
     }
     if (job.minSalary) {
-      return `Từ ${job.currency || 'VNĐ'} ${job.minSalary.toLocaleString()}`;
+      return `Từ ${job.currency || "VNĐ"} ${job.minSalary.toLocaleString()}`;
     }
     if (job.maxSalary) {
-      return `Đến ${job.currency || 'VNĐ'} ${job.maxSalary.toLocaleString()}`;
+      return `Đến ${job.currency || "VNĐ"} ${job.maxSalary.toLocaleString()}`;
     }
-    return 'Không công bố';
+    return "Không công bố";
   };
 
   const getJobLocation = (job: Job): string => {
     const parts = [job.city, job.state, job.country].filter(Boolean);
-    if (parts.length === 0) return 'Không xác định';
-    return parts.join(', ');
+    if (parts.length === 0) return "Không xác định";
+    return parts.join(", ");
   };
 
   const getJobTypeDisplay = (jobType?: string): string => {
     const typeMap: { [key: string]: string } = {
-      'full_time': 'Toàn thời gian',
-      'part_time': 'Bán thời gian',
-      'contract': 'Hợp đồng',
-      'freelance': 'Freelance',
-      'internship': 'Thực tập',
+      full_time: "Toàn thời gian",
+      part_time: "Bán thời gian",
+      contract: "Hợp đồng",
+      freelance: "Freelance",
+      internship: "Thực tập",
     };
-    return typeMap[jobType || ''] || 'Không xác định';
+    return typeMap[jobType || ""] || "Không xác định";
   };
 
   const getTimeAgo = (dateString: string): string => {
     const now = new Date();
     const date = new Date(dateString);
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
+    );
 
-    if (diffInHours < 1) return 'Vừa đăng';
+    if (diffInHours < 1) return "Vừa đăng";
     if (diffInHours < 24) return `${diffInHours} giờ trước`;
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 30) return `${diffInDays} ngày trước`;
@@ -289,9 +295,14 @@ export default function JobsPage() {
       if (searchQuery) {
         const searchLower = searchQuery.toLowerCase();
         const matchesTitle = job.title.toLowerCase().includes(searchLower);
-        const matchesCompany = job.company.name.toLowerCase().includes(searchLower);
-        const matchesDescription = job.description.toLowerCase().includes(searchLower);
-        if (!matchesTitle && !matchesCompany && !matchesDescription) return false;
+        const matchesCompany = job.company.name
+          .toLowerCase()
+          .includes(searchLower);
+        const matchesDescription = job.description
+          .toLowerCase()
+          .includes(searchLower);
+        if (!matchesTitle && !matchesCompany && !matchesDescription)
+          return false;
       }
 
       // Location filter
@@ -308,24 +319,31 @@ export default function JobsPage() {
       if (job.maxSalary) jobMaxSalary = job.maxSalary / 1000000;
       else if (job.minSalary) jobMaxSalary = job.minSalary / 1000000;
 
-      const salaryInRange = jobMaxSalary >= salaryRange[0] && jobMinSalary <= salaryRange[1];
+      const salaryInRange =
+        jobMaxSalary >= salaryRange[0] && jobMinSalary <= salaryRange[1];
       if (!salaryInRange) return false;
 
       // Job type filter
       const jobTypeMatch =
         selectedJobTypes.length === 0 ||
-        selectedJobTypes.some(type => job.jobType?.toLowerCase().includes(type.toLowerCase()));
+        selectedJobTypes.some((type) =>
+          job.jobType?.toLowerCase().includes(type.toLowerCase()),
+        );
 
       // Experience level filter
       const experienceMatch =
         selectedExperienceLevels.length === 0 ||
-        selectedExperienceLevels.some(level => job.experienceLevel?.toLowerCase().includes(level.toLowerCase()));
+        selectedExperienceLevels.some((level) =>
+          job.experienceLevel?.toLowerCase().includes(level.toLowerCase()),
+        );
 
       // Skills filter
       const skillsMatch =
         selectedSkills.length === 0 ||
-        selectedSkills.some(skillName =>
-          job.skills.some(skill => skill.name.toLowerCase().includes(skillName.toLowerCase()))
+        selectedSkills.some((skillName) =>
+          job.skills.some((skill) =>
+            skill.name.toLowerCase().includes(skillName.toLowerCase()),
+          ),
         );
 
       return jobTypeMatch && experienceMatch && skillsMatch;
@@ -340,18 +358,34 @@ export default function JobsPage() {
           return bSalary - aSalary;
         case "relevant":
           // Relevance based on skills and tags matching selected filters
-          const aRelevance = (selectedSkills.length > 0 ?
-            a.skills.filter(skill => selectedSkills.some(s => skill.name.includes(s))).length : 0) +
-            (selectedSkills.length > 0 ?
-            a.tags.filter(tag => selectedSkills.some(s => tag.name.includes(s))).length : 0);
-          const bRelevance = (selectedSkills.length > 0 ?
-            b.skills.filter(skill => selectedSkills.some(s => skill.name.includes(s))).length : 0) +
-            (selectedSkills.length > 0 ?
-            b.tags.filter(tag => selectedSkills.some(s => tag.name.includes(s))).length : 0);
+          const aRelevance =
+            (selectedSkills.length > 0
+              ? a.skills.filter((skill) =>
+                  selectedSkills.some((s) => skill.name.includes(s)),
+                ).length
+              : 0) +
+            (selectedSkills.length > 0
+              ? a.tags.filter((tag) =>
+                  selectedSkills.some((s) => tag.name.includes(s)),
+                ).length
+              : 0);
+          const bRelevance =
+            (selectedSkills.length > 0
+              ? b.skills.filter((skill) =>
+                  selectedSkills.some((s) => skill.name.includes(s)),
+                ).length
+              : 0) +
+            (selectedSkills.length > 0
+              ? b.tags.filter((tag) =>
+                  selectedSkills.some((s) => tag.name.includes(s)),
+                ).length
+              : 0);
           return bRelevance - aRelevance;
         case "newest":
         default:
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
       }
     });
 
@@ -371,24 +405,24 @@ export default function JobsPage() {
   const totalPages = Math.ceil(filteredAndSortedJobs.length / jobsPerPage);
   const paginatedJobs = filteredAndSortedJobs.slice(
     (currentPage - 1) * jobsPerPage,
-    currentPage * jobsPerPage
+    currentPage * jobsPerPage,
   );
 
   const handleJobTypeChange = (jobType: string, checked: boolean) => {
     setSelectedJobTypes((prev) =>
-      checked ? [...prev, jobType] : prev.filter((type) => type !== jobType)
+      checked ? [...prev, jobType] : prev.filter((type) => type !== jobType),
     );
   };
 
   const handleExperienceLevelChange = (level: string, checked: boolean) => {
     setSelectedExperienceLevels((prev) =>
-      checked ? [...prev, level] : prev.filter((l) => l !== level)
+      checked ? [...prev, level] : prev.filter((l) => l !== level),
     );
   };
 
   const handleSkillToggle = (skill: string) => {
     setSelectedSkills((prev) =>
-      prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]
+      prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill],
     );
   };
 
@@ -533,7 +567,7 @@ export default function JobsPage() {
                             onCheckedChange={(checked) =>
                               handleExperienceLevelChange(
                                 level,
-                                checked as boolean
+                                checked as boolean,
                               )
                             }
                             className="data-[state=checked]:bg-[#f26b38] data-[state=checked]:border-[#f26b38]"
@@ -549,20 +583,31 @@ export default function JobsPage() {
                   {/* Salary Range */}
                   <div className="mb-6">
                     <h3 className="text-sm text-gray-600 mb-3">
-                      Mức lương (triệu VNĐ)
+                      Mức lương (VNĐ)
                     </h3>
                     <div className="px-2">
-                      <Slider
-                        value={salaryRange}
-                        onValueChange={setSalaryRange}
-                        min={0}
-                        max={100}
-                        step={5}
-                        className="mb-4"
-                      />
-                      <div className="flex items-center justify-between text-sm text-gray-600">
-                        <span>{salaryRange[0]} triệu</span>
-                        <span>{salaryRange[1]} triệu</span>
+                      <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-4">
+                        <Slider
+                          value={salaryRange}
+                          onValueChange={setSalaryRange}
+                          min={0}
+                          max={10}
+                          step={0.5}
+                          className="mb-4"
+                        />
+                        <div className="flex items-center justify-between">
+                          <div className="bg-white rounded-lg px-3 py-2 shadow-sm border">
+                            <span className="text-sm font-semibold text-[#f26b38]">
+                              {salaryRange[0] === 0 ? '0 VNĐ' : `${salaryRange[0]} triệu`}
+                            </span>
+                          </div>
+                          <div className="text-gray-400 text-sm">đến</div>
+                          <div className="bg-white rounded-lg px-3 py-2 shadow-sm border">
+                            <span className="text-sm font-semibold text-[#f26b38]">
+                              {salaryRange[1] === 10 ? '10 triệu VNĐ' : `${salaryRange[1]} triệu`}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -570,7 +615,9 @@ export default function JobsPage() {
                   {/* Skills - Note: Skills filter will be implemented when skills data is available */}
                   <div>
                     <h3 className="text-sm text-gray-600 mb-3">Kỹ năng</h3>
-                    <p className="text-xs text-gray-500">Tính năng lọc theo kỹ năng sẽ được cập nhật sau.</p>
+                    <p className="text-xs text-gray-500">
+                      Tính năng lọc theo kỹ năng sẽ được cập nhật sau.
+                    </p>
                   </div>
                 </div>
               </aside>
@@ -587,7 +634,8 @@ export default function JobsPage() {
                     việc làm
                     {/* Debug Info */}
                     <span className="ml-4 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
-                      API: {jobs.length} jobs • Display: {filteredAndSortedJobs.length} filtered
+                      API: {jobs.length} jobs • Display:{" "}
+                      {filteredAndSortedJobs.length} filtered
                     </span>
                   </div>
                   <div className="flex items-center gap-4">
@@ -613,7 +661,7 @@ export default function JobsPage() {
                       value={sortBy}
                       onChange={(e) =>
                         setSortBy(
-                          e.target.value as "newest" | "salary" | "relevant"
+                          e.target.value as "newest" | "salary" | "relevant",
                         )
                       }
                       className="bg-white border border-gray-200 text-gray-700 rounded-lg px-3 py-2 text-sm"
@@ -629,7 +677,9 @@ export default function JobsPage() {
                 {isLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-8 w-8 animate-spin text-[#f26b38]" />
-                    <span className="ml-2 text-gray-600">Đang tải danh sách việc làm...</span>
+                    <span className="ml-2 text-gray-600">
+                      Đang tải danh sách việc làm...
+                    </span>
                   </div>
                 ) : (
                   <>
@@ -648,7 +698,9 @@ export default function JobsPage() {
                                 ? "text-[#f26b38] bg-orange-50 hover:bg-orange-100"
                                 : "text-gray-400 bg-gray-50 hover:bg-gray-100 hover:text-[#f26b38]"
                             }`}
-                            title={savedJobs.has(job.id) ? "Bỏ lưu" : "Lưu việc làm"}
+                            title={
+                              savedJobs.has(job.id) ? "Bỏ lưu" : "Lưu việc làm"
+                            }
                           >
                             <Bookmark
                               className={`h-5 w-5 ${
@@ -679,15 +731,21 @@ export default function JobsPage() {
                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 text-sm">
                                 <div className="flex items-center gap-0.5 text-gray-600">
                                   <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                                  <span className="truncate">{getJobLocation(job)}</span>
+                                  <span className="truncate">
+                                    {getJobLocation(job)}
+                                  </span>
                                 </div>
                                 <div className="flex items-center gap-0.5 text-gray-600">
                                   <DollarSign className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                                  <span className="truncate">{getJobSalaryDisplay(job)}</span>
+                                  <span className="truncate">
+                                    {getJobSalaryDisplay(job)}
+                                  </span>
                                 </div>
                                 <div className="flex items-center gap-0.5 text-gray-600">
                                   <Briefcase className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                                  <span className="truncate">{getJobTypeDisplay(job.jobType)}</span>
+                                  <span className="truncate">
+                                    {getJobTypeDisplay(job.jobType)}
+                                  </span>
                                 </div>
                               </div>
 
@@ -712,12 +770,12 @@ export default function JobsPage() {
                                       {tag.name}
                                     </Badge>
                                   ))}
-                                  {(job.skills.length + job.tags.length) > 3 && (
+                                  {job.skills.length + job.tags.length > 3 && (
                                     <Badge
                                       variant="secondary"
                                       className="text-xs px-2 py-1 bg-gray-100 text-gray-500"
                                     >
-                                      +{(job.skills.length + job.tags.length) - 3}
+                                      +{job.skills.length + job.tags.length - 3}
                                     </Badge>
                                   )}
                                 </div>
@@ -759,8 +817,13 @@ export default function JobsPage() {
                     {paginatedJobs.length === 0 && !isLoading && (
                       <div className="text-center py-12">
                         <Briefcase className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Không tìm thấy việc làm nào</h3>
-                        <p className="text-gray-600">Hãy thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa khác.</p>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          Không tìm thấy việc làm nào
+                        </h3>
+                        <p className="text-gray-600">
+                          Hãy thử điều chỉnh bộ lọc hoặc tìm kiếm với từ khóa
+                          khác.
+                        </p>
                       </div>
                     )}
                   </>

@@ -36,7 +36,7 @@ export class JobsController {
 
   @Post()
   @UseGuards(JwtGuard, RolesGuard)
-  @Roles(RoleName.EMPLOYER, RoleName.HR)
+  @Roles(RoleName.EMPLOYER, RoleName.HR, RoleName.JOB_SEEKER)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a new job posting' })
   @ApiResponse({

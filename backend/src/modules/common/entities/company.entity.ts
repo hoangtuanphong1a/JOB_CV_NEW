@@ -1,6 +1,7 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
+import { Branch } from './branch.entity';
 
 export enum CompanySize {
   STARTUP = 'startup', // 1-10 employees
@@ -26,7 +27,7 @@ export enum Industry {
 @Entity('companies')
 export class Company extends BaseEntity {
   @Column({ unique: true })
-  name: string;
+  name!: string;
 
   @Column({ nullable: true })
   description?: string;
@@ -77,11 +78,11 @@ export class Company extends BaseEntity {
     type: 'varchar',
     default: 'active',
   })
-  status: string;
+  status!: string;
 
   // Verification fields for admin approval
   @Column({ type: 'boolean', default: false })
-  isVerified: boolean;
+  isVerified!: boolean;
 
   @Column({ type: 'datetime', nullable: true })
   verifiedAt?: Date;
@@ -91,11 +92,14 @@ export class Company extends BaseEntity {
 
   // Foreign key to the user who created/owns the company
   @Column({ name: 'owner_id' })
-  ownerId: string;
+  ownerId!: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'owner_id' })
-  owner: User;
+  owner!: User;
+
+  @OneToMany(() => Branch, (branch) => branch.company)
+  branches!: Branch[];
 
   get fullAddress(): string {
     const parts = [this.address, this.city, this.state, this.country].filter(

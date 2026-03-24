@@ -4,6 +4,7 @@ import { BaseEntity } from './base.entity';
 import { UserRole } from './user-role.entity';
 import { SavedJob } from './saved-job.entity';
 import { JobSeekerProfile } from './job-seeker-profile.entity';
+import { EmployerProfile } from './employer-profile.entity';
 
 export enum UserStatus {
   ACTIVE = 'active',
@@ -20,10 +21,10 @@ export enum Gender {
 @Entity('users')
 export class User extends BaseEntity {
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column()
-  password: string;
+  password!: string;
 
   @Column({ nullable: true })
   firstName?: string;
@@ -50,7 +51,7 @@ export class User extends BaseEntity {
     type: 'varchar',
     default: 'active',
   })
-  status: string;
+  status!: string;
 
   @Column({ type: 'datetime', nullable: true })
   emailVerifiedAt?: Date;
@@ -59,7 +60,7 @@ export class User extends BaseEntity {
   lastLoginAt?: Date;
 
   @Column({ type: 'boolean', default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @Column({ nullable: true })
   statusReason?: string;
@@ -78,16 +79,22 @@ export class User extends BaseEntity {
   preferredLocale?: string;
 
   @OneToMany(() => UserRole, (userRole) => userRole.user)
-  userRoles: UserRole[];
+  userRoles!: UserRole[];
 
   @OneToMany(() => SavedJob, (savedJob) => savedJob.user)
-  savedJobs: SavedJob[];
+  savedJobs!: SavedJob[];
 
   @OneToMany(
     () => JobSeekerProfile,
     (jobSeekerProfile) => jobSeekerProfile.user,
   )
-  jobSeekerProfiles: JobSeekerProfile[];
+  jobSeekerProfiles!: JobSeekerProfile[];
+
+  @OneToMany(
+    () => EmployerProfile,
+    (employerProfile) => employerProfile.user,
+  )
+  employerProfiles!: EmployerProfile[];
 
   @BeforeInsert()
   async hashPassword() {
