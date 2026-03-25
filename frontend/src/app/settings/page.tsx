@@ -223,11 +223,24 @@ export default function SettingsPage() {
       // Call the backend API to update profile
       const updatedUser = await UserService.updateProfile(updateData);
 
-      // Save updated user data back to localStorage
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      // Preserve existing user data (especially roles) when updating
+      const currentUserData = user || {};
+      const mergedUserData = {
+        ...currentUserData,  // Keep existing data including roles
+        ...updatedUser,      // Override with updated data
+        // Ensure roles are preserved if not returned by API
+        roles: updatedUser.roles || currentUserData.roles || [],
+        // Construct name from firstName and lastName if available
+        name: updatedUser.firstName && updatedUser.lastName 
+          ? `${updatedUser.firstName} ${updatedUser.lastName}`
+          : updatedUser.firstName || formData.name || currentUserData.name,
+      };
+
+      // Save merged user data back to localStorage
+      localStorage.setItem("user", JSON.stringify(mergedUserData));
 
       // Update local state
-      setUser(updatedUser);
+      setUser(mergedUserData);
 
       // Dispatch custom event to update header
       window.dispatchEvent(new CustomEvent("userLogin"));

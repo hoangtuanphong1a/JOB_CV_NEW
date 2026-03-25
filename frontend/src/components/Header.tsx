@@ -104,110 +104,13 @@ const Header = () => {
         { name: "Tìm việc làm", href: "/jobs", icon: Search },
         { name: "Đăng tin tuyển dụng", href: "/jobs/post", icon: Briefcase },
         { name: "Việc làm IT", href: "/jobs?category=it", icon: TrendingUp },
-        {
-          name: "Việc làm Marketing",
-          href: "/jobs?category=marketing",
-          icon: TrendingUp,
-        },
+        { name: "Việc làm Marketing", href: "/jobs?category=marketing", icon: TrendingUp },
         { name: "Việc làm Kế Toán", href: "/jobs?category=accounting", icon: Briefcase },
-        { name: "Việc làm Tài Chính", href: "/jobs?category=finance", icon: Briefcase },
         { name: "Việc làm Kinh Doanh", href: "/jobs?category=sales", icon: Briefcase },
         { name: "Việc làm Nhân Sự", href: "/jobs?category=hr", icon: Briefcase },
         { name: "Việc làm Xây Dựng", href: "/jobs?category=construction", icon: Briefcase },
         { name: "Việc làm Y Tế", href: "/jobs?category=healthcare", icon: Briefcase },
         { name: "Việc làm Giáo Dục", href: "/jobs?category=education", icon: Briefcase },
-        { name: "Việc làm Luật", href: "/jobs?category=legal", icon: Briefcase },
-        {
-          name: "Việc theo ngành nghề",
-          href: "/jobs/categories",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc theo địa điểm",
-          href: "/jobs/locations",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Hồ Chí Minh",
-          href: "/jobs?location=hcm",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Hà Nội",
-          href: "/jobs?location=hanoi",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Đà Nẵng",
-          href: "/jobs?location=danang",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Cần Thơ",
-          href: "/jobs?location=cantho",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm tại Bình Dương",
-          href: "/jobs?location=binhduong",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Nổi bật",
-          href: "/jobs?featured=true",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Tuyển gấp",
-          href: "/jobs?urgent=true",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Part-time",
-          href: "/jobs?type=parttime",
-          icon: Briefcase,
-        },
-        { name: "Việc làm Remote", href: "/jobs?remote=true", icon: Briefcase },
-        {
-          name: "Việc làm Không cần kinh nghiệm",
-          href: "/jobs?experience=none",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Mới tốt nghiệp",
-          href: "/jobs?experience=fresh",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Có kinh nghiệm",
-          href: "/jobs?experience=experienced",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Quản lý",
-          href: "/jobs?experience=manager",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Thực tập",
-          href: "/jobs?experience=intern",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Toàn thời gian",
-          href: "/jobs?type=fulltime",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Hợp đồng",
-          href: "/jobs?type=contract",
-          icon: Briefcase,
-        },
-        {
-          name: "Việc làm Nghề tự do",
-          href: "/jobs?type=freelance",
-          icon: Briefcase,
-        },
       ],
     },
     {
@@ -218,133 +121,12 @@ const Header = () => {
       dropdownItems: [
         { name: "Danh sách công ty", href: "/companies", icon: Building2 },
         { name: "Top công ty", href: "/companies/top", icon: TrendingUp },
-        { name: "Nổi bật", href: "/companies?featured=true", icon: Building2 },
-        {
-          name: "Tiêu biểu",
-          href: "/companies?highlighted=true",
-          icon: Building2,
-        },
-        {
-          name: "Công nghệ",
-          href: "/companies?industry=technology",
-          icon: Building2,
-        },
-        {
-          name: "Y tế",
-          href: "/companies?industry=healthcare",
-          icon: Building2,
-        },
-        {
-          name: "Giáo dục",
-          href: "/companies?industry=education",
-          icon: Building2,
-        },
-        {
-          name: "Bảo hiểm",
-          href: "/companies?industry=insurance",
-          icon: Building2,
-        },
-        {
-          name: "Ngân hàng",
-          href: "/companies?industry=banking",
-          icon: Building2,
-        },
-        {
-          name: "Marketing",
-          href: "/companies?industry=marketing",
-          icon: Building2,
-        },
-        {
-          name: "Nhà hàng",
-          href: "/companies?industry=restaurant",
-          icon: Building2,
-        },
-        {
-          name: "Khách sạn",
-          href: "/companies?industry=hotel",
-          icon: Building2,
-        },
-        {
-          name: "Bất động sản",
-          href: "/companies?industry=realestate",
-          icon: Building2,
-        },
-        {
-          name: "Công nghiệp",
-          href: "/companies?industry=manufacturing",
-          icon: Building2,
-        },
-        {
-          name: "Thương mại",
-          href: "/companies?industry=trading",
-          icon: Building2,
-        },
-        {
-          name: "Dịch vụ",
-          href: "/companies?industry=services",
-          icon: Building2,
-        },
-        {
-          name: "Xây dựng",
-          href: "/companies?industry=construction",
-          icon: Building2,
-        },
-        {
-          name: "Giao thông vận tải",
-          href: "/companies?industry=transportation",
-          icon: Building2,
-        },
-        {
-          name: "Logistics",
-          href: "/companies?industry=logistics",
-          icon: Building2,
-        },
-        {
-          name: "Nông nghiệp",
-          href: "/companies?industry=agriculture",
-          icon: Building2,
-        },
-        {
-          name: "Khai khoáng",
-          href: "/companies?industry=mining",
-          icon: Building2,
-        },
-        {
-          name: "Năng lượng",
-          href: "/companies?industry=energy",
-          icon: Building2,
-        },
-        {
-          name: "Môi trường",
-          href: "/companies?industry=environment",
-          icon: Building2,
-        },
-        {
-          name: "Tư vấn",
-          href: "/companies?industry=consulting",
-          icon: Building2,
-        },
-        { name: "Luật", href: "/companies?industry=legal", icon: Building2 },
-        {
-          name: "Kế toán",
-          href: "/companies?industry=accounting",
-          icon: Building2,
-        },
-        {
-          name: "Kiểm toán",
-          href: "/companies?industry=auditing",
-          icon: Building2,
-        },
-        {
-          name: "Quảng cáo",
-          href: "/companies?industry=advertising",
-          icon: Building2,
-        },
-        {
-          name: "Truyền thông",
-          href: "/companies?industry=media",
-          icon: Building2,
-        },
+        { name: "Công ty nổi bật", href: "/companies?featured=true", icon: Building2 },
+        { name: "Công ty công nghệ", href: "/companies?industry=technology", icon: Building2 },
+        { name: "Công ty tài chính", href: "/companies?industry=finance", icon: Building2 },
+        { name: "Công ty giáo dục", href: "/companies?industry=education", icon: Building2 },
+        { name: "Công ty y tế", href: "/companies?industry=healthcare", icon: Building2 },
+        { name: "Công ty xây dựng", href: "/companies?industry=construction", icon: Building2 },
       ],
     },
     {
@@ -356,56 +138,9 @@ const Header = () => {
         { name: "Tất cả bài viết", href: "/blog", icon: FileText },
         { name: "CV & Tuyển dụng", href: "/blog?category=cv", icon: FileText },
         { name: "Phỏng vấn", href: "/blog?category=interview", icon: FileText },
-        {
-          name: "Phát triển nghề nghiệp",
-          href: "/blog?category=career",
-          icon: FileText,
-        },
-        {
-          name: "Kỹ năng mềm",
-          href: "/blog?category=soft-skills",
-          icon: FileText,
-        },
-        {
-          name: "Kỹ năng chuyên môn",
-          href: "/blog?category=professional-skills",
-          icon: FileText,
-        },
-        {
-          name: "Tâm sự nghề nghiệp",
-          href: "/blog?category=career-stories",
-          icon: FileText,
-        },
-        {
-          name: "Tin tức ngành",
-          href: "/blog?category=industry-news",
-          icon: FileText,
-        },
-        {
-          name: "Hướng nghiệp",
-          href: "/blog?category=career-guidance",
-          icon: FileText,
-        },
-        {
-          name: "Thị trường lao động",
-          href: "/blog?category=labor-market",
-          icon: FileText,
-        },
-        {
-          name: "Bí quyết thành công",
-          href: "/blog?category=success-tips",
-          icon: FileText,
-        },
-        {
-          name: "Câu chuyện thành đạt",
-          href: "/blog?category=success-stories",
-          icon: FileText,
-        },
-        {
-          name: "Tư vấn nghề nghiệp",
-          href: "/blog?category=career-advice",
-          icon: FileText,
-        },
+        { name: "Phát triển nghề nghiệp", href: "/blog?category=career", icon: FileText },
+        { name: "Kỹ năng mềm", href: "/blog?category=soft-skills", icon: FileText },
+        { name: "Tin tức ngành", href: "/blog?category=industry-news", icon: FileText },
       ],
     },
     {
@@ -417,144 +152,12 @@ const Header = () => {
         pathname?.startsWith("/cv-preview/"),
       hasDropdown: true,
       dropdownItems: [
-        { name: "Chọn mẫu CV", href: "/cv-builder", icon: FileText },
         { name: "Tạo CV mới", href: "/cv-builder", icon: FileText },
-        {
-          name: "Mẫu CV chuyên nghiệp",
-          href: "/cv-builder?category=professional",
-          icon: FileText,
-        },
-        {
-          name: "Mẫu CV hiện đại",
-          href: "/cv-builder?category=modern",
-          icon: FileText,
-        },
-        {
-          name: "Mẫu CV sáng tạo",
-          href: "/cv-builder?category=creative",
-          icon: FileText,
-        },
+        { name: "Mẫu CV chuyên nghiệp", href: "/cv-builder?category=professional", icon: FileText },
+        { name: "Mẫu CV hiện đại", href: "/cv-builder?category=modern", icon: FileText },
+        { name: "Mẫu CV sáng tạo", href: "/cv-builder?category=creative", icon: FileText },
         { name: "CV miễn phí", href: "/cv-builder?free=true", icon: FileText },
-        {
-          name: "CV cao cấp",
-          href: "/cv-builder?premium=true",
-          icon: FileText,
-        },
-        {
-          name: "CV theo ngành nghề",
-          href: "/cv-builder?industry=true",
-          icon: FileText,
-        },
-        {
-          name: "CV IT/Công nghệ",
-          href: "/cv-builder?industry=it",
-          icon: FileText,
-        },
-        {
-          name: "CV Marketing",
-          href: "/cv-builder?industry=marketing",
-          icon: FileText,
-        },
-        {
-          name: "CV Kế toán",
-          href: "/cv-builder?industry=accounting",
-          icon: FileText,
-        },
-        {
-          name: "CV Kinh doanh",
-          href: "/cv-builder?industry=business",
-          icon: FileText,
-        },
-        {
-          name: "CV Hành chính",
-          href: "/cv-builder?industry=admin",
-          icon: FileText,
-        },
-        {
-          name: "CV Y tế",
-          href: "/cv-builder?industry=healthcare",
-          icon: FileText,
-        },
-        {
-          name: "CV Giáo dục",
-          href: "/cv-builder?industry=education",
-          icon: FileText,
-        },
-        {
-          name: "CV Xây dựng",
-          href: "/cv-builder?industry=construction",
-          icon: FileText,
-        },
-        {
-          name: "CV theo kinh nghiệm",
-          href: "/cv-builder?experience=true",
-          icon: FileText,
-        },
-        {
-          name: "CV cho sinh viên",
-          href: "/cv-builder?experience=student",
-          icon: FileText,
-        },
-        {
-          name: "CV cho người đi làm",
-          href: "/cv-builder?experience=professional",
-          icon: FileText,
-        },
-        {
-          name: "CV cho quản lý",
-          href: "/cv-builder?experience=manager",
-          icon: FileText,
-        },
-        {
-          name: "CV cho thực tập",
-          href: "/cv-builder?experience=intern",
-          icon: FileText,
-        },
-        {
-          name: "CV theo trình độ",
-          href: "/cv-builder?level=true",
-          icon: FileText,
-        },
-        {
-          name: "CV tiếng Anh",
-          href: "/cv-builder?language=en",
-          icon: FileText,
-        },
-        {
-          name: "CV tiếng Việt",
-          href: "/cv-builder?language=vi",
-          icon: FileText,
-        },
-        {
-          name: "CV song ngữ",
-          href: "/cv-builder?language=bilingual",
-          icon: FileText,
-        },
-        {
-          name: "CV theo mục đích",
-          href: "/cv-builder?purpose=true",
-          icon: FileText,
-        },
-        {
-          name: "CV xin việc",
-          href: "/cv-builder?purpose=job",
-          icon: FileText,
-        },
-        {
-          name: "CV du học",
-          href: "/cv-builder?purpose=study",
-          icon: FileText,
-        },
-        {
-          name: "CV xin visa",
-          href: "/cv-builder?purpose=visa",
-          icon: FileText,
-        },
-        {
-          name: "CV học bổng",
-          href: "/cv-builder?purpose=scholarship",
-          icon: FileText,
-        },
+        { name: "CV theo ngành nghề", href: "/cv-builder?industry=true", icon: FileText },
       ],
     },
   ];
@@ -648,17 +251,17 @@ const Header = () => {
                       <ChevronDown className="h-4 w-4" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-[1200px]">
-                    <div className="grid grid-cols-5 gap-4 p-4">
+                  <DropdownMenuContent align="start" className="w-[250px]">
+                    <div className="flex flex-col gap-1 p-1">
                       {item.dropdownItems?.map((dropdownItem, index) => (
                         <DropdownMenuItem
                           key={index}
                           onClick={() => handleNavigation(dropdownItem.href)}
-                          className="cursor-pointer p-2 hover:bg-gray-100 rounded-md whitespace-nowrap"
+                          className="cursor-pointer p-3 hover:bg-gray-100 rounded-md whitespace-nowrap"
                         >
-                          <div className="flex items-center gap-2">
-                            <dropdownItem.icon className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-xs font-normal">
+                          <div className="flex items-center gap-3">
+                            <dropdownItem.icon className="h-5 w-5 flex-shrink-0" />
+                            <span className="text-sm font-normal">
                               {dropdownItem.name}
                             </span>
                           </div>
@@ -738,7 +341,7 @@ const Header = () => {
                       )}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-64">
+                  <DropdownMenuContent align="end" className="w-72">
                     <div className="px-3 py-2 border-b">
                       <p className="text-sm font-medium text-gray-900">
                         {user?.name || "User"}

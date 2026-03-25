@@ -95,10 +95,15 @@ export function FeaturedJobs() {
   };
 
   const formatSalary = (amount: number): string => {
-    return amount.toLocaleString('vi-VN');
+    // Remove decimal places if present and format with dots as thousand separators
+    const cleanAmount = Math.floor(amount);
+    return cleanAmount.toLocaleString('vi-VN');
   };
 
   const getJobSalaryDisplay = (job: Job): string => {
+    if (job.salaryType === "negotiable") {
+      return "Thương lượng";
+    }
     if (job.minSalary && job.maxSalary) {
       return `${formatSalary(job.minSalary)} - ${formatSalary(job.maxSalary)} ${job.currency || 'VNĐ'}`;
     }
@@ -108,7 +113,7 @@ export function FeaturedJobs() {
     if (job.maxSalary) {
       return `Đến ${formatSalary(job.maxSalary)} ${job.currency || 'VNĐ'}`;
     }
-    return 'Thương lượng';
+    return "Không công bố";
   };
 
   const getJobLocation = (job: Job): string => {

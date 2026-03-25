@@ -19,7 +19,7 @@ import {
   Video,
   Info,
   User,
-  Building2
+  Building2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -29,7 +29,7 @@ interface Conversation {
     id: string;
     name: string;
     avatar?: string;
-    role: 'employer' | 'job_seeker';
+    role: "employer" | "job_seeker";
     company?: string;
     position?: string;
   };
@@ -48,18 +48,19 @@ interface Message {
   senderId: string;
   content: string;
   timestamp: string;
-  type: 'text' | 'image' | 'file';
+  type: "text" | "image" | "file";
   isRead: boolean;
 }
 
 export default function MessagesPage() {
   const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [selectedConversation, setSelectedConversation] =
+    useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Mock conversations data
@@ -69,19 +70,21 @@ export default function MessagesPage() {
       participant: {
         id: "emp1",
         name: "Nguyễn Thị B",
-        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=50&h=50&fit=crop&crop=face",
+        avatar:
+          "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=50&h=50&fit=crop&crop=face",
         role: "employer",
         company: "Tech Solutions Vietnam",
-        position: "HR Manager"
+        position: "HR Manager",
       },
       lastMessage: {
-        content: "Chúng tôi rất ấn tượng với hồ sơ của bạn. Bạn có thể tham gia phỏng vấn vào thứ 5 tuần sau không?",
+        content:
+          "Chúng tôi rất ấn tượng với hồ sơ của bạn. Bạn có thể tham gia phỏng vấn vào thứ 5 tuần sau không?",
         timestamp: "2024-11-25T14:30:00Z",
         senderId: "emp1",
-        isRead: false
+        isRead: false,
       },
       unreadCount: 2,
-      isOnline: true
+      isOnline: true,
     },
     {
       id: "2",
@@ -90,35 +93,38 @@ export default function MessagesPage() {
         name: "Trần Văn C",
         role: "employer",
         company: "Digital Agency Pro",
-        position: "Technical Lead"
+        position: "Technical Lead",
       },
       lastMessage: {
-        content: "Cảm ơn bạn đã ứng tuyển vị trí Frontend Developer. Chúng tôi sẽ liên hệ lại sớm.",
+        content:
+          "Cảm ơn bạn đã ứng tuyển vị trí Frontend Developer. Chúng tôi sẽ liên hệ lại sớm.",
         timestamp: "2024-11-24T09:15:00Z",
         senderId: "emp2",
-        isRead: true
+        isRead: true,
       },
       unreadCount: 0,
-      isOnline: false
+      isOnline: false,
     },
     {
       id: "3",
       participant: {
         id: "seeker1",
         name: "Lê Thị D",
-        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop&crop=face",
+        avatar:
+          "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop&crop=face",
         role: "job_seeker",
-        position: "UI/UX Designer"
+        position: "UI/UX Designer",
       },
       lastMessage: {
-        content: "Chào bạn, mình cũng đang tìm việc ở Hà Nội. Bạn có lời khuyên gì không?",
+        content:
+          "Chào bạn, mình cũng đang tìm việc ở Hà Nội. Bạn có lời khuyên gì không?",
         timestamp: "2024-11-23T16:45:00Z",
         senderId: "seeker1",
-        isRead: true
+        isRead: true,
       },
       unreadCount: 0,
-      isOnline: true
-    }
+      isOnline: true,
+    },
   ];
 
   // Mock messages for selected conversation
@@ -126,35 +132,39 @@ export default function MessagesPage() {
     {
       id: "1",
       senderId: "emp1",
-      content: "Xin chào Nguyễn Văn A, cảm ơn bạn đã ứng tuyển vị trí Senior Frontend Developer tại Tech Solutions Vietnam.",
+      content:
+        "Xin chào Nguyễn Văn A, cảm ơn bạn đã ứng tuyển vị trí Senior Frontend Developer tại Tech Solutions Vietnam.",
       timestamp: "2024-11-25T14:00:00Z",
       type: "text",
-      isRead: true
+      isRead: true,
     },
     {
       id: "2",
       senderId: "me",
-      content: "Xin chào, cảm ơn anh/chị đã liên hệ. Tôi rất quan tâm đến vị trí này.",
+      content:
+        "Xin chào, cảm ơn anh/chị đã liên hệ. Tôi rất quan tâm đến vị trí này.",
       timestamp: "2024-11-25T14:05:00Z",
       type: "text",
-      isRead: true
+      isRead: true,
     },
     {
       id: "3",
       senderId: "emp1",
-      content: "Sau khi xem xét hồ sơ của bạn, chúng tôi đánh giá cao kinh nghiệm của bạn với React và TypeScript.",
+      content:
+        "Sau khi xem xét hồ sơ của bạn, chúng tôi đánh giá cao kinh nghiệm của bạn với React và TypeScript.",
       timestamp: "2024-11-25T14:20:00Z",
       type: "text",
-      isRead: true
+      isRead: true,
     },
     {
       id: "4",
       senderId: "emp1",
-      content: "Chúng tôi rất ấn tượng với hồ sơ của bạn. Bạn có thể tham gia phỏng vấn vào thứ 5 tuần sau không?",
+      content:
+        "Chúng tôi rất ấn tượng với hồ sơ của bạn. Bạn có thể tham gia phỏng vấn vào thứ 5 tuần sau không?",
       timestamp: "2024-11-25T14:30:00Z",
       type: "text",
-      isRead: false
-    }
+      isRead: false,
+    },
   ];
 
   useEffect(() => {
@@ -166,10 +176,10 @@ export default function MessagesPage() {
   }, [messages]);
 
   const checkAuthAndLoadData = async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem("access_token");
 
     if (!token) {
-      router.push('/auth/login');
+      router.push("/auth/login");
       return;
     }
 
@@ -181,7 +191,7 @@ export default function MessagesPage() {
         setMessages(mockMessages);
       }
     } catch (error) {
-      console.error('Error loading messages:', error);
+      console.error("Error loading messages:", error);
     } finally {
       setIsLoading(false);
     }
@@ -206,15 +216,15 @@ export default function MessagesPage() {
       content: newMessage.trim(),
       timestamp: new Date().toISOString(),
       type: "text",
-      isRead: true
+      isRead: true,
     };
 
-    setMessages(prev => [...prev, message]);
-    setNewMessage('');
+    setMessages((prev) => [...prev, message]);
+    setNewMessage("");
 
     // Update last message in conversation
-    setConversations(prev =>
-      prev.map(conv =>
+    setConversations((prev) =>
+      prev.map((conv) =>
         conv.id === selectedConversation.id
           ? {
               ...conv,
@@ -222,32 +232,37 @@ export default function MessagesPage() {
                 content: message.content,
                 timestamp: message.timestamp,
                 senderId: message.senderId,
-                isRead: true
-              }
+                isRead: true,
+              },
             }
-          : conv
-      )
+          : conv,
+      ),
     );
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
 
-  const filteredConversations = conversations.filter(conv =>
-    conv.participant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.participant.company?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredConversations = conversations.filter(
+    (conv) =>
+      conv.participant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      conv.participant.company
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()),
   );
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
+    );
 
-    if (diffInHours < 1) return 'Vừa xong';
+    if (diffInHours < 1) return "Vừa xong";
     if (diffInHours < 24) return `${diffInHours} giờ trước`;
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays} ngày trước`;
@@ -255,9 +270,9 @@ export default function MessagesPage() {
 
   const formatMessageTime = (timestamp: string) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString('vi-VN', {
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -277,28 +292,51 @@ export default function MessagesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4">
+      <header className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <Link href="/">
-                <Button variant="outline" size="sm" className="text-[#f26b38] border-[#f26b38] hover:bg-[#f26b38] hover:text-white">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50 hover:text-blue-900"
+                >
                   <Home className="h-4 w-4 mr-2" />
                   Trang chủ
                 </Button>
               </Link>
-              <div>
-                <h1 className="text-3xl font-bold">Tin nhắn</h1>
-                <p className="text-gray-600 mt-1">Trao đổi với nhà tuyển dụng và ứng viên khác</p>
+              <div className="flex flex-col">
+                <h1 className="text-4xl font-bold text-blue-900">Tin nhắn</h1>
+                <p className="text-blue-600 mt-2 text-lg">
+                  Trao đổi với nhà tuyển dụng và ứng viên khác
+                </p>
               </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Trạng thái: </span>
+                <Badge
+                  variant="secondary"
+                  className="bg-green-100 text-green-800"
+                >
+                  Hoạt động
+                </Badge>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
-      </div>
-
+      </header>
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 ">
             {/* Conversations List */}
             <div className="lg:col-span-1">
               <Card className="h-full flex flex-col">
@@ -328,7 +366,9 @@ export default function MessagesPage() {
                         key={conversation.id}
                         onClick={() => handleSelectConversation(conversation)}
                         className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
-                          selectedConversation?.id === conversation.id ? 'bg-orange-50 border-l-4 border-l-[#f26b38]' : ''
+                          selectedConversation?.id === conversation.id
+                            ? "bg-orange-50 border-l-4 border-l-[#f26b38]"
+                            : ""
                         }`}
                       >
                         <div className="flex items-start gap-3">
@@ -342,7 +382,9 @@ export default function MessagesPage() {
                                 />
                               ) : (
                                 <span className="text-lg font-bold text-[#f26b38]">
-                                  {conversation.participant.name.charAt(0).toUpperCase()}
+                                  {conversation.participant.name
+                                    .charAt(0)
+                                    .toUpperCase()}
                                 </span>
                               )}
                             </div>
@@ -362,25 +404,29 @@ export default function MessagesPage() {
                             </div>
 
                             <div className="flex items-center gap-2 mb-1">
-                              {conversation.participant.role === 'employer' ? (
+                              {conversation.participant.role === "employer" ? (
                                 <Building2 className="h-3 w-3 text-[#f26b38]" />
                               ) : (
                                 <User className="h-3 w-3 text-blue-600" />
                               )}
                               <span className="text-xs text-gray-600">
-                                {conversation.participant.role === 'employer'
+                                {conversation.participant.role === "employer"
                                   ? conversation.participant.company
-                                  : conversation.participant.position
-                                }
+                                  : conversation.participant.position}
                               </span>
                             </div>
 
-                            <p className={`text-sm truncate ${
-                              !conversation.lastMessage.isRead && conversation.lastMessage.senderId !== 'me'
-                                ? 'font-semibold text-gray-900'
-                                : 'text-gray-600'
-                            }`}>
-                              {conversation.lastMessage.senderId === 'me' ? 'Bạn: ' : ''}
+                            <p
+                              className={`text-sm truncate ${
+                                !conversation.lastMessage.isRead &&
+                                conversation.lastMessage.senderId !== "me"
+                                  ? "font-semibold text-gray-900"
+                                  : "text-gray-600"
+                              }`}
+                            >
+                              {conversation.lastMessage.senderId === "me"
+                                ? "Bạn: "
+                                : ""}
                               {conversation.lastMessage.content}
                             </p>
 
@@ -415,7 +461,9 @@ export default function MessagesPage() {
                             />
                           ) : (
                             <span className="text-sm font-bold text-[#f26b38]">
-                              {selectedConversation.participant.name.charAt(0).toUpperCase()}
+                              {selectedConversation.participant.name
+                                .charAt(0)
+                                .toUpperCase()}
                             </span>
                           )}
                         </div>
@@ -428,10 +476,9 @@ export default function MessagesPage() {
                           {selectedConversation.participant.name}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          {selectedConversation.participant.role === 'employer'
+                          {selectedConversation.participant.role === "employer"
                             ? selectedConversation.participant.company
-                            : selectedConversation.participant.position
-                          }
+                            : selectedConversation.participant.position}
                         </p>
                       </div>
                     </div>
@@ -454,19 +501,23 @@ export default function MessagesPage() {
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`flex ${message.senderId === 'me' ? 'justify-end' : 'justify-start'}`}
+                        className={`flex ${message.senderId === "me" ? "justify-end" : "justify-start"}`}
                       >
                         <div
                           className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                            message.senderId === 'me'
-                              ? 'bg-[#f26b38] text-white'
-                              : 'bg-gray-100 text-gray-900'
+                            message.senderId === "me"
+                              ? "bg-[#f26b38] text-white"
+                              : "bg-gray-100 text-gray-900"
                           }`}
                         >
                           <p className="text-sm">{message.content}</p>
-                          <p className={`text-xs mt-1 ${
-                            message.senderId === 'me' ? 'text-orange-100' : 'text-gray-500'
-                          }`}>
+                          <p
+                            className={`text-xs mt-1 ${
+                              message.senderId === "me"
+                                ? "text-orange-100"
+                                : "text-gray-500"
+                            }`}
+                          >
                             {formatMessageTime(message.timestamp)}
                           </p>
                         </div>
@@ -509,8 +560,12 @@ export default function MessagesPage() {
                 <Card className="h-full flex items-center justify-center">
                   <div className="text-center text-gray-500">
                     <MessageCircle className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                    <h3 className="text-xl font-semibold mb-2">Chọn cuộc trò chuyện</h3>
-                    <p>Chọn một cuộc trò chuyện từ danh sách để bắt đầu nhắn tin</p>
+                    <h3 className="text-xl font-semibold mb-2">
+                      Chọn cuộc trò chuyện
+                    </h3>
+                    <p>
+                      Chọn một cuộc trò chuyện từ danh sách để bắt đầu nhắn tin
+                    </p>
                   </div>
                 </Card>
               )}

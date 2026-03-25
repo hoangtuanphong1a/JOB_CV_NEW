@@ -15,7 +15,7 @@ import {
   Building2,
   MapPin,
   DollarSign,
-  Clock
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,7 +60,7 @@ export default function JobApplyPage({ params }: JobDetailPageProps) {
   const [applicationData, setApplicationData] = useState({
     coverLetter: "",
     resume: null as File | null,
-    source: "website"
+    source: "website",
   });
 
   // Mock job data - in real app, fetch from API based on slug
@@ -68,18 +68,21 @@ export default function JobApplyPage({ params }: JobDetailPageProps) {
     const fetchJobData = async () => {
       try {
         // Try to get job data from API
-        const token = localStorage.getItem('access_token');
+        const token = localStorage.getItem("access_token");
         const headers: HeadersInit = {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         };
 
         if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
+          headers["Authorization"] = `Bearer ${token}`;
         }
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/jobs/${urlParams.slug}`, {
-          headers,
-        });
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/jobs/${urlParams.slug}`,
+          {
+            headers,
+          },
+        );
 
         if (response.ok) {
           const data = await response.json();
@@ -97,10 +100,10 @@ export default function JobApplyPage({ params }: JobDetailPageProps) {
             salary: {
               min: 25000000,
               max: 40000000,
-              currency: "VNĐ"
+              currency: "VNĐ",
             },
             location: "TP.HCM",
-            type: "Toàn thời gian"
+            type: "Toàn thời gian",
           });
         }
       } catch (error) {
@@ -116,10 +119,10 @@ export default function JobApplyPage({ params }: JobDetailPageProps) {
           salary: {
             min: 25000000,
             max: 40000000,
-            currency: "VNĐ"
+            currency: "VNĐ",
           },
           location: "TP.HCM",
-          type: "Toàn thời gian"
+          type: "Toàn thời gian",
         });
       } finally {
         setLoading(false);
@@ -133,15 +136,19 @@ export default function JobApplyPage({ params }: JobDetailPageProps) {
     const file = e.target.files?.[0];
     if (file) {
       // Validate file type
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const allowedTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
       if (!allowedTypes.includes(file.type)) {
-        alert('Chỉ chấp nhận file PDF, DOC, hoặc DOCX');
+        alert("Chỉ chấp nhận file PDF, DOC, hoặc DOCX");
         return;
       }
 
       // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
-        alert('File không được vượt quá 5MB');
+        alert("File không được vượt quá 5MB");
         return;
       }
 
@@ -156,16 +163,16 @@ export default function JobApplyPage({ params }: JobDetailPageProps) {
     try {
       // Validate that we have a job ID
       const jobId = jobData?.id || urlParams.slug;
-      if (!jobId || jobId === 'undefined') {
-        alert('Không thể xác định vị trí công việc. Vui lòng thử lại.');
+      if (!jobId || jobId === "undefined") {
+        alert("Không thể xác định vị trí công việc. Vui lòng thử lại.");
         return;
       }
 
       // Get token for authentication
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem("access_token");
       if (!token) {
-        alert('Vui lòng đăng nhập để ứng tuyển');
-        router.push('/auth/login');
+        alert("Vui lòng đăng nhập để ứng tuyển");
+        router.push("/auth/login");
         return;
       }
 
@@ -177,24 +184,27 @@ export default function JobApplyPage({ params }: JobDetailPageProps) {
         // resumeUrl will be handled separately if needed
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/applications`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/applications`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(applicationPayload),
         },
-        body: JSON.stringify(applicationPayload),
-      });
+      );
 
       if (response.ok) {
         setIsSubmitted(true);
       } else {
         const errorData = await response.json();
-        alert(`Lỗi: ${errorData.message || 'Không thể gửi đơn ứng tuyển'}`);
+        alert(`Lỗi: ${errorData.message || "Không thể gửi đơn ứng tuyển"}`);
       }
     } catch (error) {
-      console.error('Error submitting application:', error);
-      alert('Có lỗi xảy ra. Vui lòng thử lại sau.');
+      console.error("Error submitting application:", error);
+      alert("Có lỗi xảy ra. Vui lòng thử lại sau.");
     } finally {
       setIsSubmitting(false);
     }
@@ -227,17 +237,23 @@ export default function JobApplyPage({ params }: JobDetailPageProps) {
               Ứng tuyển thành công!
             </h1>
             <p className="text-lg text-gray-600 mb-8">
-              Đơn ứng tuyển của bạn đã được gửi đến <strong>{jobData?.company?.name}</strong> cho vị trí <strong>{jobData?.title}</strong>.
+              Đơn ứng tuyển của bạn đã được gửi đến{" "}
+              <strong>{jobData?.company?.name}</strong> cho vị trí{" "}
+              <strong>{jobData?.title}</strong>.
             </p>
             <div className="space-y-4">
               <p className="text-gray-600">
-                Nhà tuyển dụng sẽ xem xét hồ sơ của bạn và liên hệ nếu bạn phù hợp với vị trí.
+                Nhà tuyển dụng sẽ xem xét hồ sơ của bạn và liên hệ nếu bạn phù
+                hợp với vị trí.
               </p>
               <div className="flex gap-4 justify-center">
-                <Button onClick={() => router.push('/jobs')}>
+                <Button onClick={() => router.push("/jobs")}>
                   Tìm việc làm khác
                 </Button>
-                <Button variant="outline" onClick={() => router.push('/dashboard')}>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push("/dashboard")}
+                >
                   Xem dashboard
                 </Button>
               </div>
@@ -268,7 +284,10 @@ export default function JobApplyPage({ params }: JobDetailPageProps) {
           {/* Job Summary */}
           <div className="flex items-start gap-4">
             <img
-              src={jobData?.company?.logo || "https://images.unsplash.com/photo-1549924231-f129b911e442?w=60&h=60&fit=crop&crop=center"}
+              src={
+                jobData?.company?.logo ||
+                "https://images.unsplash.com/photo-1549924231-f129b911e442?w=60&h=60&fit=crop&crop=center"
+              }
               alt={jobData?.company?.name}
               className="w-12 h-12 rounded-lg border flex-shrink-0"
             />
@@ -287,7 +306,9 @@ export default function JobApplyPage({ params }: JobDetailPageProps) {
                 </span>
                 <span className="flex items-center gap-1">
                   <DollarSign className="h-4 w-4" />
-                  {jobData?.salary ? `${(jobData.salary.min / 1000000).toFixed(0)}-${(jobData.salary.max / 1000000).toFixed(0)} triệu` : "Lương thương lượng"}
+                  {jobData?.salary
+                    ? `${jobData.salary.min.toLocaleString("vi-VN")}-${jobData.salary.max.toLocaleString("vi-VN")} VNĐ`
+                    : "Lương thương lượng"}
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
@@ -321,12 +342,18 @@ export default function JobApplyPage({ params }: JobDetailPageProps) {
                     <Textarea
                       required
                       value={applicationData.coverLetter}
-                      onChange={(e) => setApplicationData({ ...applicationData, coverLetter: e.target.value })}
+                      onChange={(e) =>
+                        setApplicationData({
+                          ...applicationData,
+                          coverLetter: e.target.value,
+                        })
+                      }
                       placeholder="Giới thiệu về bản thân, kinh nghiệm, kỹ năng và lý do bạn muốn ứng tuyển vị trí này..."
                       rows={8}
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Viết một lá thư xin việc hấp dẫn sẽ tăng cơ hội được nhà tuyển dụng chú ý
+                      Viết một lá thư xin việc hấp dẫn sẽ tăng cơ hội được nhà
+                      tuyển dụng chú ý
                     </p>
                   </div>
 
@@ -335,8 +362,14 @@ export default function JobApplyPage({ params }: JobDetailPageProps) {
                     <div className="flex items-start gap-3">
                       <User className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
                       <div className="text-sm text-blue-800">
-                        <p className="font-medium mb-1">Thông tin cá nhân từ hồ sơ của bạn</p>
-                        <p>Thông tin cá nhân (tên, email, số điện thoại) sẽ được lấy từ hồ sơ job seeker của bạn. Bạn có thể cập nhật thông tin này trong phần cài đặt tài khoản.</p>
+                        <p className="font-medium mb-1">
+                          Thông tin cá nhân từ hồ sơ của bạn
+                        </p>
+                        <p>
+                          Thông tin cá nhân (tên, email, số điện thoại) sẽ được
+                          lấy từ hồ sơ job seeker của bạn. Bạn có thể cập nhật
+                          thông tin này trong phần cài đặt tài khoản.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -362,11 +395,17 @@ export default function JobApplyPage({ params }: JobDetailPageProps) {
                     </Button>
                     <p className="text-xs text-gray-500 text-center mt-2">
                       Bằng việc gửi đơn ứng tuyển, bạn đồng ý với{" "}
-                      <Link href="/terms" className="text-[#f26b38] hover:underline">
+                      <Link
+                        href="/terms"
+                        className="text-[#f26b38] hover:underline"
+                      >
                         Điều khoản sử dụng
                       </Link>{" "}
                       và{" "}
-                      <Link href="/privacy" className="text-[#f26b38] hover:underline">
+                      <Link
+                        href="/privacy"
+                        className="text-[#f26b38] hover:underline"
+                      >
                         Chính sách bảo mật
                       </Link>
                     </p>
@@ -399,7 +438,9 @@ export default function JobApplyPage({ params }: JobDetailPageProps) {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Mức lương:</span>
                   <span className="font-medium text-green-600">
-                    {jobData?.salary ? `${(jobData.salary.min / 1000000).toFixed(0)}-${(jobData.salary.max / 1000000).toFixed(0)} triệu` : "Thương lượng"}
+                    {jobData?.salary
+                      ? `${jobData.salary.min.toLocaleString("vi-VN")}-${jobData.salary.max.toLocaleString("vi-VN")} VNĐ`
+                      : "Thương lượng"}
                   </span>
                 </div>
               </CardContent>

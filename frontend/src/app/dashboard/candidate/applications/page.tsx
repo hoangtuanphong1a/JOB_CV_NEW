@@ -170,13 +170,21 @@ export default function CandidateApplicationsPage() {
     { value: 'withdrawn', label: 'Đã rút' }
   ];
 
-  const formatSalary = (job: Application['job']) => {
-    const formatSalary = (amount: number): string => {
-      return amount.toLocaleString('vi-VN');
-    };
+  const formatSalary = (amount: number): string => {
+    // Remove decimal places if present and format with dots as thousand separators
+    const cleanAmount = Math.floor(amount);
+    return cleanAmount.toLocaleString('vi-VN');
+  };
 
+  const formatSalaryDisplay = (job: Application['job']) => {
     if (job.salaryMin && job.salaryMax) {
       return `${formatSalary(job.salaryMin)} - ${formatSalary(job.salaryMax)} ${job.currency || 'VNĐ'}`;
+    }
+    if (job.salaryMin) {
+      return `Từ ${formatSalary(job.salaryMin)} ${job.currency || 'VNĐ'}`;
+    }
+    if (job.salaryMax) {
+      return `Đến ${formatSalary(job.salaryMax)} ${job.currency || 'VNĐ'}`;
     }
     return 'Thương lượng';
   };
@@ -371,7 +379,7 @@ export default function CandidateApplicationsPage() {
                           </div>
 
                           <div className="text-sm text-gray-600 mb-3">
-                            <span className="font-medium text-green-600">{formatSalary(application.job)}</span>
+                            <span className="font-medium text-green-600">{formatSalaryDisplay(application.job)}</span>
                           </div>
                         </div>
 

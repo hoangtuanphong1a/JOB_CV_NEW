@@ -8,7 +8,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Briefcase,
   Search,
@@ -24,7 +30,7 @@ import {
   Users,
   AlertTriangle,
   ArrowLeft,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 import { adminService, Job as AdminJob } from "@/services/adminService";
 
@@ -42,7 +48,7 @@ interface Job {
     max: number;
     currency: string;
   };
-  status: 'draft' | 'published' | 'closed' | 'expired' | 'pending_approval';
+  status: "draft" | "published" | "closed" | "expired" | "pending_approval";
   postedDate: string;
   expiryDate?: string;
   applicationsCount: number;
@@ -76,36 +82,39 @@ export default function AdminJobsPage() {
       const params = {
         page: currentPage,
         limit: 20,
-        ...filters
+        ...filters,
       };
 
       const response = await adminService.getAllJobs(params);
 
       // Transform the data to match UI expectations
-      const transformedJobs: Job[] = response.data.map(job => ({
+      const transformedJobs: Job[] = response.data.map((job) => ({
         id: job.id,
         title: job.title,
         company: job.company,
-        location: 'Not specified', // Not available in current backend
-        salary: job.salaryMin && job.salaryMax ? {
-          min: job.salaryMin,
-          max: job.salaryMax,
-          currency: 'VND'
-        } : undefined,
-        status: job.status as Job['status'],
+        location: "Not specified", // Not available in current backend
+        salary:
+          job.salaryMin && job.salaryMax
+            ? {
+                min: job.salaryMin,
+                max: job.salaryMax,
+                currency: "VND",
+              }
+            : undefined,
+        status: job.status as Job["status"],
         postedDate: job.createdAt,
         expiryDate: job.expiresAt || undefined,
         applicationsCount: job.applications?.length || 0,
         viewsCount: 0, // Not available in current backend
-        category: 'General', // Not available in current backend
-        employmentType: 'Full-time', // Not available in current backend
-        description: job.description
+        category: "General", // Not available in current backend
+        employmentType: "Full-time", // Not available in current backend
+        description: job.description,
       }));
 
       setJobs(transformedJobs);
       setTotalPages(response.totalPages);
     } catch (error) {
-      console.error('Error fetching jobs:', error);
+      console.error("Error fetching jobs:", error);
     } finally {
       setIsLoading(false);
     }
@@ -116,20 +125,41 @@ export default function AdminJobsPage() {
       await adminService.updateJobStatus(jobId, newStatus);
       fetchJobs(); // Refresh the list
     } catch (error) {
-      console.error('Error updating job status:', error);
+      console.error("Error updating job status:", error);
     }
   };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      published: { label: 'Đã xuất bản', color: 'bg-green-100 text-green-700', icon: CheckCircle },
-      draft: { label: 'Bản nháp', color: 'bg-gray-100 text-gray-700', icon: Edit },
-      closed: { label: 'Đã đóng', color: 'bg-red-100 text-red-700', icon: XCircle },
-      expired: { label: 'Đã hết hạn', color: 'bg-orange-100 text-orange-700', icon: Clock },
-      pending_approval: { label: 'Chờ duyệt', color: 'bg-yellow-100 text-yellow-700', icon: AlertTriangle }
+      published: {
+        label: "Đã xuất bản",
+        color: "bg-green-100 text-green-700",
+        icon: CheckCircle,
+      },
+      draft: {
+        label: "Bản nháp",
+        color: "bg-gray-100 text-gray-700",
+        icon: Edit,
+      },
+      closed: {
+        label: "Đã đóng",
+        color: "bg-red-100 text-red-700",
+        icon: XCircle,
+      },
+      expired: {
+        label: "Đã hết hạn",
+        color: "bg-orange-100 text-orange-700",
+        icon: Clock,
+      },
+      pending_approval: {
+        label: "Chờ duyệt",
+        color: "bg-yellow-100 text-yellow-700",
+        icon: AlertTriangle,
+      },
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
     const Icon = config.icon;
 
     return (
@@ -140,16 +170,28 @@ export default function AdminJobsPage() {
     );
   };
 
-  const formatSalary = (salary?: { min: number; max: number; currency: string }) => {
-    const formatAmount = (amount: number): string => {
-      return amount.toLocaleString('vi-VN');
-    };
+  const formatSalary = (amount: number): string => {
+    // Remove decimal places if present and format with dots as thousand separators
+    const cleanAmount = Math.floor(amount);
+    return cleanAmount.toLocaleString("vi-VN");
+  };
 
-    if (!salary) return 'Thương lượng';
+  const formatSalaryDisplay = (salary?: {
+    min: number;
+    max: number;
+    currency: string;
+  }) => {
+    if (!salary) return "Thương lượng";
     if (salary.min && salary.max) {
-      return `${formatAmount(salary.min)} - ${formatAmount(salary.max)} ${salary.currency}`;
+      return `${formatSalary(salary.min)} - ${formatSalary(salary.max)} ${salary.currency}`;
     }
-    return `${formatAmount(salary.min || salary.max || 0)} ${salary.currency}`;
+    if (salary.min) {
+      return `Từ ${formatSalary(salary.min)} ${salary.currency}`;
+    }
+    if (salary.max) {
+      return `Đến ${formatSalary(salary.max)} ${salary.currency}`;
+    }
+    return "Thương lượng";
   };
 
   if (isLoading) {
@@ -160,7 +202,9 @@ export default function AdminJobsPage() {
           <div className="container mx-auto px-4">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#f26b38] mx-auto"></div>
-              <p className="mt-4 text-gray-600">Đang tải danh sách tin tuyển dụng...</p>
+              <p className="mt-4 text-gray-600">
+                Đang tải danh sách tin tuyển dụng...
+              </p>
             </div>
           </div>
         </div>
@@ -181,7 +225,7 @@ export default function AdminJobsPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => router.push('/dashboard/admin')}
+                onClick={() => router.push("/dashboard/admin")}
                 className="flex items-center gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -189,7 +233,9 @@ export default function AdminJobsPage() {
               </Button>
               <div>
                 <h1 className="text-3xl font-bold">Quản lý tin tuyển dụng</h1>
-                <p className="text-gray-600 mt-1">Duyệt và quản lý tất cả tin tuyển dụng trên hệ thống.</p>
+                <p className="text-gray-600 mt-1">
+                  Duyệt và quản lý tất cả tin tuyển dụng trên hệ thống.
+                </p>
               </div>
             </div>
           </div>
@@ -203,13 +249,23 @@ export default function AdminJobsPage() {
                   <Input
                     placeholder="Tìm kiếm theo tiêu đề công việc..."
                     className="pl-10"
-                    value={filters.search || ''}
-                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                    value={filters.search || ""}
+                    onChange={(e) =>
+                      setFilters({ ...filters, search: e.target.value })
+                    }
                   />
                 </div>
               </div>
 
-              <Select value={filters.status || 'all'} onValueChange={(value) => setFilters({ ...filters, status: value === 'all' ? undefined : value })}>
+              <Select
+                value={filters.status || "all"}
+                onValueChange={(value) =>
+                  setFilters({
+                    ...filters,
+                    status: value === "all" ? undefined : value,
+                  })
+                }
+              >
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Tất cả trạng thái" />
                 </SelectTrigger>
@@ -223,7 +279,15 @@ export default function AdminJobsPage() {
                 </SelectContent>
               </Select>
 
-              <Select value={filters.category || 'all'} onValueChange={(value) => setFilters({ ...filters, category: value === 'all' ? undefined : value })}>
+              <Select
+                value={filters.category || "all"}
+                onValueChange={(value) =>
+                  setFilters({
+                    ...filters,
+                    category: value === "all" ? undefined : value,
+                  })
+                }
+              >
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Tất cả danh mục" />
                 </SelectTrigger>
@@ -251,121 +315,155 @@ export default function AdminJobsPage() {
           {/* Jobs List */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Danh sách tin tuyển dụng ({jobs.length})</h2>
+              <h2 className="text-xl font-semibold">
+                Danh sách tin tuyển dụng ({jobs.length})
+              </h2>
             </div>
 
             <div className="space-y-4">
-              {jobs.length > 0 ? jobs.map((job) => (
-                <div key={job.id} className="p-6 border border-gray-200 rounded-lg hover:border-[#f26b38] transition-colors">
-                  <div className="flex items-start justify-between gap-6">
-                    <div className="flex-1">
-                      <div className="flex items-start gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center flex-shrink-0">
-                          {job.company.logo ? (
-                            <img src={job.company.logo} alt={job.company.name} className="w-full h-full rounded-lg object-cover" />
-                          ) : (
-                            <Building className="h-6 w-6 text-[#f26b38]" />
-                          )}
+              {jobs.length > 0 ? (
+                jobs.map((job) => (
+                  <div
+                    key={job.id}
+                    className="p-6 border border-gray-200 rounded-lg hover:border-[#f26b38] transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-6">
+                      <div className="flex-1">
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center flex-shrink-0">
+                            {job.company.logo ? (
+                              <img
+                                src={job.company.logo}
+                                alt={job.company.name}
+                                className="w-full h-full rounded-lg object-cover"
+                              />
+                            ) : (
+                              <Building className="h-6 w-6 text-[#f26b38]" />
+                            )}
+                          </div>
+
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-lg font-semibold hover:text-[#f26b38] cursor-pointer">
+                                {job.title}
+                              </h3>
+                              {getStatusBadge(job.status)}
+                            </div>
+
+                            <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                              <div className="flex items-center gap-1">
+                                <Building className="h-4 w-4" />
+                                <span>{job.company.name}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-4 w-4" />
+                                <span>{job.location}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                <span>
+                                  Đăng{" "}
+                                  {new Date(job.postedDate).toLocaleDateString(
+                                    "vi-VN",
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-6 text-sm">
+                              <div className="flex items-center gap-1">
+                                <Users className="h-4 w-4 text-gray-400" />
+                                <span>{job.applicationsCount} ứng viên</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Eye className="h-4 w-4 text-gray-400" />
+                                <span>{job.viewsCount} lượt xem</span>
+                              </div>
+                              <div className="font-medium text-green-600">
+                                {formatSalaryDisplay(job.salary)}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 mt-3">
+                              <Badge variant="secondary">{job.category}</Badge>
+                              <Badge variant="outline">
+                                {job.employmentType}
+                              </Badge>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold hover:text-[#f26b38] cursor-pointer">{job.title}</h3>
-                            {getStatusBadge(job.status)}
-                          </div>
-
-                          <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-                            <div className="flex items-center gap-1">
-                              <Building className="h-4 w-4" />
-                              <span>{job.company.name}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4" />
-                              <span>{job.location}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              <span>Đăng {new Date(job.postedDate).toLocaleDateString('vi-VN')}</span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-6 text-sm">
-                            <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4 text-gray-400" />
-                              <span>{job.applicationsCount} ứng viên</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Eye className="h-4 w-4 text-gray-400" />
-                              <span>{job.viewsCount} lượt xem</span>
-                            </div>
-                            <div className="font-medium text-green-600">
-                              {formatSalary(job.salary)}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 mt-3">
-                            <Badge variant="secondary">{job.category}</Badge>
-                            <Badge variant="outline">{job.employmentType}</Badge>
-                          </div>
-                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-2 mb-4">
+                          {job.description}
+                        </p>
                       </div>
 
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-4">
-                        {job.description}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <Button size="sm" variant="outline" className="flex items-center gap-2">
-                        <Eye className="h-4 w-4" />
-                        Xem chi tiết
-                      </Button>
-
-                      <Button size="sm" variant="outline" className="flex items-center gap-2">
-                        <ExternalLink className="h-4 w-4" />
-                        Xem công việc
-                      </Button>
-
-                      {job.status === 'pending_approval' && (
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700 flex-1"
-                            onClick={() => handleStatusChange(job.id, 'published')}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Duyệt
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-red-300 text-red-600 hover:bg-red-50 flex-1"
-                            onClick={() => handleStatusChange(job.id, 'draft')}
-                          >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Từ chối
-                          </Button>
-                        </div>
-                      )}
-
-                      {job.status === 'published' && (
+                      <div className="flex flex-col gap-2">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="border-red-300 text-red-600 hover:bg-red-50"
-                          onClick={() => handleStatusChange(job.id, 'closed')}
+                          className="flex items-center gap-2"
                         >
-                          <XCircle className="h-4 w-4 mr-1" />
-                          Đóng tin
+                          <Eye className="h-4 w-4" />
+                          Xem chi tiết
                         </Button>
-                      )}
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex items-center gap-2"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          Xem công việc
+                        </Button>
+
+                        {job.status === "pending_approval" && (
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 flex-1"
+                              onClick={() =>
+                                handleStatusChange(job.id, "published")
+                              }
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Duyệt
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-red-300 text-red-600 hover:bg-red-50 flex-1"
+                              onClick={() =>
+                                handleStatusChange(job.id, "draft")
+                              }
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Từ chối
+                            </Button>
+                          </div>
+                        )}
+
+                        {job.status === "published" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-red-300 text-red-600 hover:bg-red-50"
+                            onClick={() => handleStatusChange(job.id, "closed")}
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Đóng tin
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )) : (
+                ))
+              ) : (
                 <div className="text-center py-12">
                   <Briefcase className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500">Không tìm thấy tin tuyển dụng nào</p>
+                  <p className="text-gray-500">
+                    Không tìm thấy tin tuyển dụng nào
+                  </p>
                 </div>
               )}
             </div>
@@ -382,17 +480,23 @@ export default function AdminJobsPage() {
                   Trước
                 </Button>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <Button
-                    key={page}
-                    variant={page === currentPage ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    className={page === currentPage ? "bg-[#f26b38] hover:bg-[#e05a27]" : ""}
-                  >
-                    {page}
-                  </Button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <Button
+                      key={page}
+                      variant={page === currentPage ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className={
+                        page === currentPage
+                          ? "bg-[#f26b38] hover:bg-[#e05a27]"
+                          : ""
+                      }
+                    >
+                      {page}
+                    </Button>
+                  ),
+                )}
 
                 <Button
                   variant="outline"

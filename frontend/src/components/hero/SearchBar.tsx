@@ -138,16 +138,19 @@ export function SearchBar() {
     router.push(`/jobs/${jobId}/apply`);
   };
 
-  const formatSalary = (min?: number, max?: number) => {
+  const formatSalary = (amount: number): string => {
+    // Remove decimal places if present and format with dots as thousand separators
+    const cleanAmount = Math.floor(amount);
+    return cleanAmount.toLocaleString('vi-VN');
+  };
+
+  const formatSalaryDisplay = (min?: number, max?: number) => {
     if (!min && !max) return 'Thương lượng';
-    const formatAmount = (amount: number) => {
-      return (amount / 1000000).toFixed(0) + ' triệu';
-    };
     if (min && max) {
-      return `${formatAmount(min)} - ${formatAmount(max)}`;
+      return `${formatSalary(min)} - ${formatSalary(max)} VNĐ`;
     }
-    if (min) return `Từ ${formatAmount(min)}`;
-    if (max) return `Đến ${formatAmount(max)}`;
+    if (min) return `Từ ${formatSalary(min)} VNĐ`;
+    if (max) return `Đến ${formatSalary(max)} VNĐ`;
     return 'Thương lượng';
   };
 
@@ -313,7 +316,7 @@ export function SearchBar() {
                           </div>
                           <div className="flex items-center gap-1">
                             <DollarSign className="h-4 w-4" />
-                            <span>{formatSalary(job.minSalary, job.maxSalary)}</span>
+                            <span>{formatSalaryDisplay(job.minSalary, job.maxSalary)}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Briefcase className="h-4 w-4" />

@@ -19,7 +19,7 @@ import {
   Briefcase,
   GraduationCap,
   Award,
-  TrendingUp
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +39,7 @@ const jobData = {
     logo: "https://images.unsplash.com/photo-1549924231-f129b911e442?w=80&h=80&fit=crop&crop=center",
     location: "Quận 1, TP.HCM",
     rating: 4.8,
-    verified: true
+    verified: true,
   },
   type: "Toàn thời gian",
   experience: "3-5 năm",
@@ -47,7 +47,7 @@ const jobData = {
     min: 25,
     max: 40,
     currency: "triệu",
-    period: "tháng"
+    period: "tháng",
   },
   location: "TP.HCM",
   remote: "Có thể làm remote",
@@ -72,7 +72,7 @@ Trong vai trò này, bạn sẽ:
     "Kinh nghiệm với testing frameworks (Jest, React Testing Library)",
     "Khả năng làm việc nhóm và giao tiếp tốt",
     "Tiếng Anh giao tiếp",
-    "Ưu tiên có kinh nghiệm với Next.js, Tailwind CSS"
+    "Ưu tiên có kinh nghiệm với Next.js, Tailwind CSS",
   ],
 
   benefits: [
@@ -83,12 +83,20 @@ Trong vai trò này, bạn sẽ:
     "Đào tạo và phát triển nghề nghiệp liên tục",
     "Môi trường làm việc năng động, sáng tạo",
     "Cơ hội thăng tiến và phát triển bản thân",
-    "Team building và các hoạt động tập thể hàng tháng"
+    "Team building và các hoạt động tập thể hàng tháng",
   ],
 
   skills: [
-    "React", "TypeScript", "JavaScript", "Next.js", "Tailwind CSS",
-    "Redux", "GraphQL", "Jest", "Git", "Figma"
+    "React",
+    "TypeScript",
+    "JavaScript",
+    "Next.js",
+    "Tailwind CSS",
+    "Redux",
+    "GraphQL",
+    "Jest",
+    "Git",
+    "Figma",
   ],
 
   similarJobs: [
@@ -98,7 +106,7 @@ Trong vai trò này, bạn sẽ:
       company: "StartupTech",
       location: "TP.HCM",
       salary: "15-25 triệu",
-      logo: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=60&h=60&fit=crop&crop=center"
+      logo: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=60&h=60&fit=crop&crop=center",
     },
     {
       id: "3",
@@ -106,7 +114,7 @@ Trong vai trò này, bạn sẽ:
       company: "InnoTech",
       location: "Hà Nội",
       salary: "20-35 triệu",
-      logo: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=60&h=60&fit=crop&crop=center"
+      logo: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=60&h=60&fit=crop&crop=center",
     },
     {
       id: "4",
@@ -114,9 +122,9 @@ Trong vai trò này, bạn sẽ:
       company: "CodeMaster",
       location: "Đà Nẵng",
       salary: "18-30 triệu",
-      logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=60&h=60&fit=crop&crop=center"
-    }
-  ]
+      logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=60&h=60&fit=crop&crop=center",
+    },
+  ],
 };
 
 export default function JobDetailPage() {
@@ -143,7 +151,8 @@ export default function JobDetailPage() {
           >
             {/* Breadcrumb */}
             <div className="text-sm text-gray-600 mb-4">
-              <span>Việc làm</span> / <span>Frontend Developer</span> / <span className="text-gray-900 font-medium">{jobData.title}</span>
+              <span>Việc làm</span> / <span>Frontend Developer</span> /{" "}
+              <span className="text-gray-900 font-medium">{jobData.title}</span>
             </div>
 
             {/* Job Title & Company */}
@@ -160,13 +169,17 @@ export default function JobDetailPage() {
                       {jobData.title}
                     </h1>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg text-gray-700">{jobData.company.name}</span>
+                      <span className="text-lg text-gray-700">
+                        {jobData.company.name}
+                      </span>
                       {jobData.company.verified && (
                         <CheckCircle className="h-5 w-5 text-green-500" />
                       )}
                       <div className="flex items-center gap-1">
                         <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                        <span className="text-sm text-gray-600">{jobData.company.rating}</span>
+                        <span className="text-sm text-gray-600">
+                          {jobData.company.rating}
+                        </span>
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-gray-600">
@@ -181,7 +194,15 @@ export default function JobDetailPage() {
                       <div className="flex items-center gap-1">
                         <DollarSign className="h-4 w-4" />
                         <span className="font-semibold text-green-600">
-                          {jobData.salary.min}-{jobData.salary.max} {jobData.salary.currency}/{jobData.salary.period}
+                          {(jobData.salary.min * 1000000).toLocaleString(
+                            "vi-VN",
+                          )}
+                          -
+                          {(jobData.salary.max * 1000000).toLocaleString(
+                            "vi-VN",
+                          )}{" "}
+                          VNĐ/
+                          {jobData.salary.period}
                         </span>
                       </div>
                     </div>
@@ -214,20 +235,21 @@ export default function JobDetailPage() {
                   className="flex items-center gap-2"
                   onClick={() => setIsSaved(!isSaved)}
                 >
-                  <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-blue-500 text-blue-500' : ''}`} />
-                  {isSaved ? 'Đã lưu' : 'Lưu việc làm'}
+                  <Bookmark
+                    className={`h-4 w-4 ${isSaved ? "fill-blue-500 text-blue-500" : ""}`}
+                  />
+                  {isSaved ? "Đã lưu" : "Lưu việc làm"}
                 </Button>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
+                <Button variant="outline" className="flex items-center gap-2">
                   <Share2 className="h-4 w-4" />
                   Chia sẻ
                 </Button>
                 {!isApplied ? (
                   <Button
                     className="flex items-center gap-2 bg-[#f26b38] hover:bg-[#e05a27]"
-                    onClick={() => window.location.href = `/jobs/${jobData.slug}/apply`}
+                    onClick={() =>
+                      (window.location.href = `/jobs/${jobData.slug}/apply`)
+                    }
                   >
                     <Send className="h-4 w-4" />
                     Ứng tuyển ngay
@@ -267,19 +289,30 @@ export default function JobDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="prose max-w-none">
-                      {jobData.description.split('\n\n').map((paragraph, index) => (
-                        <p key={index} className="mb-4 text-gray-700 leading-relaxed">
-                          {paragraph}
-                        </p>
-                      ))}
+                      {jobData.description
+                        .split("\n\n")
+                        .map((paragraph, index) => (
+                          <p
+                            key={index}
+                            className="mb-4 text-gray-700 leading-relaxed"
+                          >
+                            {paragraph}
+                          </p>
+                        ))}
                     </div>
 
                     {/* Skills Required */}
                     <div className="mt-6">
-                      <h4 className="font-semibold text-gray-900 mb-3">Kỹ năng yêu cầu</h4>
+                      <h4 className="font-semibold text-gray-900 mb-3">
+                        Kỹ năng yêu cầu
+                      </h4>
                       <div className="flex flex-wrap gap-2">
                         {jobData.skills.map((skill, index) => (
-                          <Badge key={index} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="bg-blue-50 text-blue-700 border-blue-200"
+                          >
                             {skill}
                           </Badge>
                         ))}
@@ -306,7 +339,9 @@ export default function JobDetailPage() {
                           className="flex items-start gap-3"
                         >
                           <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 leading-relaxed">{requirement}</span>
+                          <span className="text-gray-700 leading-relaxed">
+                            {requirement}
+                          </span>
                         </motion.div>
                       ))}
                     </div>
@@ -331,7 +366,9 @@ export default function JobDetailPage() {
                           className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
                         >
                           <Award className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700 text-sm">{benefit}</span>
+                          <span className="text-gray-700 text-sm">
+                            {benefit}
+                          </span>
                         </motion.div>
                       ))}
                     </div>
@@ -348,19 +385,30 @@ export default function JobDetailPage() {
               <CardContent>
                 <div className="space-y-4">
                   {jobData.similarJobs.map((job) => (
-                    <div key={job.id} className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer">
+                    <div
+                      key={job.id}
+                      className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                    >
                       <img
                         src={job.logo}
                         alt={job.company}
                         className="w-10 h-10 rounded-lg"
                       />
                       <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900">{job.title}</h4>
-                        <p className="text-sm text-gray-600">{job.company} • {job.location}</p>
+                        <h4 className="font-semibold text-gray-900">
+                          {job.title}
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          {job.company} • {job.location}
+                        </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-green-600">{job.salary}</p>
-                        <Button size="sm" variant="outline">Xem chi tiết</Button>
+                        <p className="font-semibold text-green-600">
+                          {job.salary}
+                        </p>
+                        <Button size="sm" variant="outline">
+                          Xem chi tiết
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -384,10 +432,14 @@ export default function JobDetailPage() {
                     className="w-12 h-12 rounded-lg"
                   />
                   <div>
-                    <h4 className="font-semibold text-gray-900">{jobData.company.name}</h4>
+                    <h4 className="font-semibold text-gray-900">
+                      {jobData.company.name}
+                    </h4>
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="text-sm text-gray-600">{jobData.company.rating}</span>
+                      <span className="text-sm text-gray-600">
+                        {jobData.company.rating}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -417,7 +469,9 @@ export default function JobDetailPage() {
               <Card className="border-orange-200 bg-orange-50">
                 <CardContent className="pt-6">
                   <div className="text-center">
-                    <h3 className="font-semibold text-gray-900 mb-2">Ứng tuyển nhanh</h3>
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      Ứng tuyển nhanh
+                    </h3>
                     <p className="text-sm text-gray-600 mb-4">
                       Chỉ mất 2 phút để hoàn thành đơn ứng tuyển
                     </p>
